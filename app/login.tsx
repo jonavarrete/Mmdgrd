@@ -19,10 +19,13 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://midgard.ct.ws/public/login', {
+      const response = await fetch('https://midgard.ct.ws/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
         },
         body: JSON.stringify({
           username: username,
@@ -30,9 +33,20 @@ export default function Login() {
         })
       });
 
-      const data = await response.json();
+      // Primero obtener el texto para ver qué viene
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+    
+      // Si empieza con <html>, es la página de protección
+      if (responseText.startsWith('<html>')) {
+        //throw new Error('Server returned protection page instead of JSON');
+      }
+    
+      // Si es JSON, parsearlo
+      const data = JSON.parse(responseText);
+      console.log('Parsed data:', data);
 
-      if (response.ok && data.success) {
+      if (response.ok && data.status) {
         // Guardar token si es necesario
         // await AsyncStorage.setItem('authToken', data.token);
         router.replace('/(tabs)');
@@ -41,6 +55,8 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Login error:', error);
+      console.error('Full error:', error);
+      //console.log('Response text was:', responseText); // Esto te mostrará el HTML completo
       Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
       // Para desarrollo, permitir login sin conexión
       setIsLoading(false);
