@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RefreshCw, CreditCard as Edit, Zap, ChevronDown } from 'lucide-react-native';
 import PikeModal from '@/components/PikeModal';
 
 interface Game {
   id: string;
+  matchId: string;
   homeTeam: string;
   awayTeam: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
   time: string;
   homeScore: string;
   awayScore: string;
   homeRecord: string;
   awayRecord: string;
   league: string;
+  hasPike?: boolean;
+  periods?: {
+    fullGame?: { home: string; away: string };
+    halfTime?: { home: string; away: string };
+    firstQuarter?: { home: string; away: string };
+  };
 }
 
 export default function Dashboard() {
@@ -32,7 +43,7 @@ export default function Dashboard() {
     try {
       const dateString = `${selectedDate.year}-${selectedDate.month.toString().padStart(2, '0')}-${selectedDate.day.toString().padStart(2, '0')}`;
       
-      const response = await fetch('https://midgard.ct.ws/public/api/today_games', {
+      const response = await fetch('https://midgard.ct.ws/public/get_scores', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,14 +58,25 @@ export default function Dashboard() {
         // Transformar los datos de la API al formato esperado
         const transformedGames = data.games?.map((game: any, index: number) => ({
           id: game.id || index.toString(),
+          matchId: game.match_id || game.id || index.toString(),
           homeTeam: game.home_team || game.homeTeam,
           awayTeam: game.away_team || game.awayTeam,
+          homeTeamId: game.home_team_id || game.homeTeamId || '',
+          awayTeamId: game.away_team_id || game.awayTeamId || '',
+          homeTeamLogo: game.home_team_logo || game.homeTeamLogo,
+          awayTeamLogo: game.away_team_logo || game.awayTeamLogo,
           time: game.time || game.start_time,
           homeScore: game.home_score || game.homeScore || '0 - 0',
           awayScore: game.away_score || game.awayScore || '0 - 0',
           homeRecord: game.home_record || game.homeRecord || 'G',
           awayRecord: game.away_record || game.awayRecord || 'MT',
-          league: game.league || 'MLB'
+          league: game.league || 'MLB',
+          hasPike: game.has_pike || false,
+          periods: {
+            fullGame: game.full_game ? { home: game.full_game.home, away: game.full_game.away } : undefined,
+            halfTime: game.half_time ? { home: game.half_time.home, away: game.half_time.away } : undefined,
+            firstQuarter: game.first_quarter ? { home: game.first_quarter.home, away: game.first_quarter.away } : undefined,
+          }
         })) || [];
         
         setGames(transformedGames);
@@ -171,11 +193,15 @@ export default function Dashboard() {
                     <View style={styles.gameContent}>
                       <View style={styles.teamContainer}>
                         <View style={styles.team}>
-                          <View style={styles.teamLogo}>
-                            <Text style={styles.teamLogoText}>
-                              {game.homeTeam.split(' ').map(word => word[0]).join('')}
-                            </Text>
-                          </View>
+                          {game.homeTeamLogo ? (
+                            <Image source={{ uri: game.homeTeamLogo }} style={styles.teamLogoImage} />
+                          ) : (
+                            <View style={styles.teamLogo}>
+                              <Text style={styles.teamLogoText}>
+                                {game.homeTeam.split(' ').map(word => word[0]).join('')}
+                              </Text>
+                            </View>
+                          )}
                           <Text style={styles.teamName} numberOfLines={1}>
                             {game.homeTeam}
                           </Text>
@@ -191,11 +217,15 @@ export default function Dashboard() {
 
                       <View style={styles.teamContainer}>
                         <View style={styles.team}>
-                          <View style={styles.teamLogo}>
-                            <Text style={styles.teamLogoText}>
-                              {game.awayTeam.split(' ').map(word => word[0]).join('')}
-                            </Text>
-                          </View>
+                          {game.awayTeamLogo ? (
+                            <Image source={{ uri: game.awayTeamLogo }} style={styles.teamLogoImage} />
+                          ) : (
+                            <View style={styles.teamLogo}>
+                              <Text style={styles.teamLogoText}>
+                                {game.awayTeam.split(' ').map(word => word[0]).join('')}
+                              </Text>
+                            </View>
+                          )}
                           <Text style={styles.teamName} numberOfLines={1}>
                             {game.awayTeam}
                           </Text>
@@ -209,7 +239,7 @@ export default function Dashboard() {
                     </View>
 
                     <View style={styles.actionButtons}>
-                      {league === 'MLB' ? (
+                      {game.hasPike ? (
                         <TouchableOpacity 
                           style={styles.editButton}
                           onPress={() => handleEditPike(game)}
@@ -374,6 +404,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
+  },
+  teamLogoImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginBottom: 8,
   },
   teamLogoText: {

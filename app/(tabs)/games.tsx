@@ -14,6 +14,12 @@ interface Game {
   homeRecord: string;
   awayRecord: string;
   league: string;
+  hasPike?: boolean;
+  periods?: {
+    fullGame?: { home: string; away: string };
+    halfTime?: { home: string; away: string };
+    firstQuarter?: { home: string; away: string };
+  };
 }
 
 export default function Games() {
