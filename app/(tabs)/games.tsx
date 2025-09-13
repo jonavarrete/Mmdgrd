@@ -585,8 +585,8 @@ export default function Jugadas() {
                           <View key={jugada.id} style={styles.jugadaItem}>
                             <Text style={styles.jugadaEquipoText}>
                               {jugada.monto} {jugada.equipo} 
-                              {jugada.periodo == 'G'? '':jugada.periodo} 
-                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
+                               {jugada.periodo == 'G'? '':jugada.periodo} 
+                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
                             </Text>
                           </View>
                         ))}
@@ -601,8 +601,8 @@ export default function Jugadas() {
                           <View key={jugada.id} style={styles.jugadaItem}>
                             <Text style={styles.jugadaEquipoText}>
                               {jugada.monto} {jugada.equipo} 
-                              {jugada.periodo == 'G'? '':jugada.periodo} 
-                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
+                               {jugada.periodo == 'G'? '': jugada.periodo} 
+                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
                             </Text>
                           </View>
                         ))}
