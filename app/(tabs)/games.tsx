@@ -4,20 +4,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Eye, Target, Trash2, Send, RefreshCw } from 'lucide-react-native';
 import JugadasModal from '@/components/JugadasModal';
 import TripletasModal from '@/components/TripletasModal';
+import SearchableDropdown from '@/components/SearchableDropdown';
 
 interface Jugada {
   id: string;
   equipo: string;
-  tipo: 'G' | 'P' | 'X';
+  tipo: '-' | 'alta' | 'baja';
+  periodo: 'G' | 'MT' | '1/4';
   monto: number;
   resultado?: 'G' | 'P' | 'X';
+  section?: string;
 }
 
 interface Tripleta {
   id: string;
   equipos: Array<{
     nombre: string;
-    tipo: 'G' | 'P' | 'X';
+    tipo: '-' | 'alta' | 'baja';
+    periodo: 'G' | 'MT' | '1/4';
     resultado?: 'G' | 'P' | 'X';
   }>;
   monto: number;
@@ -39,23 +43,39 @@ export default function Jugadas() {
   const [showTripletasModal, setShowTripletasModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<CuentaJugador | null>(null);
   
-  // Form states
+  // Form states para jugadas sencillas
   const [nuevoEquipo, setNuevoEquipo] = useState('');
-  const [nuevoTipo, setNuevoTipo] = useState<'G' | 'P' | 'X'>('G');
+  const [nuevoTipo, setNuevoTipo] = useState<'-' | 'alta' | 'baja'>('-');
+  const [nuevoPeriodo, setNuevoPeriodo] = useState<'G' | 'MT' | '1/4'>('G');
   const [nuevoMonto, setNuevoMonto] = useState('');
   const [nuevoJugador, setNuevoJugador] = useState('');
   
-  // Tripleta form states
-  const [tripletaEquipos, setTripletaEquipos] = useState<Array<{nombre: string, tipo: 'G' | 'P' | 'X'}>>([
-    { nombre: '', tipo: 'G' },
-    { nombre: '', tipo: 'G' },
-    { nombre: '', tipo: 'G' }
+  // Form states para tripletas
+  const [tripletaEquipos, setTripletaEquipos] = useState<Array<{
+    nombre: string;
+    tipo: '-' | 'alta' | 'baja';
+    periodo: 'G' | 'MT' | '1/4';
+  }>>([
+    { nombre: '', tipo: '-', periodo: 'G' },
+    { nombre: '', tipo: '-', periodo: 'G' },
+    { nombre: '', tipo: '-', periodo: 'G' }
   ]);
   const [tripletaMonto, setTripletaMonto] = useState('');
   const [tripletaJugador, setTripletaJugador] = useState('');
   
-  // WhatsApp message state
-  const [whatsappMessage, setWhatsappMessage] = useState('');
+  // WhatsApp message states
+  const [whatsappJugadasMessage, setWhatsappJugadasMessage] = useState('');
+  const [whatsappTripletasMessage, setWhatsappTripletasMessage] = useState('');
+  const [whatsappJugadasJugador, setWhatsappJugadasJugador] = useState('');
+  const [whatsappTripletasJugador, setWhatsappTripletasJugador] = useState('');
+
+  // Listas de opciones
+  const jugadores = ['Piri', 'Alfredo', 'Carlos', 'Miguel', 'Ana', 'Luis'];
+  const equipos = [
+    'New York Yankees', 'Toronto Blue Jays', 'Chicago Cubs', 'Washington Nationals',
+    'Boston Red Sox', 'Lakers', 'Warriors', 'Celtics', 'Heat', 'Cartagena',
+    'Guardianes', 'Real Madrid', 'Barcelona', 'Industriales', 'Cienfuegos'
+  ];
 
   // Mock data inicial
   useEffect(() => {
@@ -64,18 +84,18 @@ export default function Jugadas() {
         id: '1',
         nombre: 'Piri',
         jugadas: [
-          { id: '1', equipo: 'Boston Red Sox', tipo: 'P', monto: 4000, resultado: 'P', section: 'G' },
-          { id: '2', equipo: 'Boston Red Sox', tipo: 'P', monto: 3000, resultado: 'G', section: 'MT' },
-          { id: '8', equipo: 'Cubs', tipo: 'P', monto: 3000, resultado: 'G', section: 'G' },
-          { id: '9', equipo: 'Brewers', tipo: 'P', monto: 3000, resultado: 'G', section: 'MT' }
+          { id: '1', equipo: 'Boston Red Sox', tipo: 'baja', periodo: 'G', monto: 4000, resultado: 'P' },
+          { id: '2', equipo: 'Boston Red Sox', tipo: 'alta', periodo: 'MT', monto: 3000, resultado: 'G' },
+          { id: '8', equipo: 'Cubs', tipo: '-', periodo: 'G', monto: 3000, resultado: 'G' },
+          { id: '9', equipo: 'Brewers', tipo: 'baja', periodo: 'MT', monto: 3000, resultado: 'G' }
         ],
         tripletas: [
           {
             id: '1',
             equipos: [
-              { nombre: 'Nigeria', tipo: 'G', resultado: 'P' },
-              { nombre: 'Portugal', tipo: 'P', resultado: 'P' },
-              { nombre: 'Irlanda', tipo: 'X', resultado: 'X' }
+              { nombre: 'Nigeria', tipo: '-', periodo: 'G', resultado: 'P' },
+              { nombre: 'Portugal', tipo: 'baja', periodo: 'MT', resultado: 'P' },
+              { nombre: 'Irlanda', tipo: 'alta', periodo: '1/4', resultado: 'X' }
             ],
             monto: 5000
           }
@@ -88,17 +108,17 @@ export default function Jugadas() {
         id: '2',
         nombre: 'Alfredo',
         jugadas: [
-          { id: '3', equipo: 'Lakers', tipo: 'G', monto: 2500, resultado: 'G', section: 'G' },
-          { id: '4', equipo: 'Warriors', tipo: 'P', monto: 1500, resultado: 'P', section: '1/4' },
-          { id: '6', equipo: 'Lakers', tipo: 'P', monto: 1500, resultado: 'G', section: 'MT' }
+          { id: '3', equipo: 'Lakers', tipo: '-', periodo: 'G', monto: 2500, resultado: 'G' },
+          { id: '4', equipo: 'Warriors', tipo: 'baja', periodo: '1/4', monto: 1500, resultado: 'P' },
+          { id: '6', equipo: 'Lakers', tipo: 'alta', periodo: 'MT', monto: 1500, resultado: 'G' }
         ],
         tripletas: [
           {
             id: '2',
             equipos: [
-              { nombre: 'Andorra', tipo: 'G', resultado: 'G' },
-              { nombre: 'Irlanda', tipo: 'P', resultado: 'P' },
-              { nombre: 'Nigeria', tipo: 'G', resultado: 'G' }
+              { nombre: 'Andorra', tipo: '-', periodo: 'G', resultado: 'G' },
+              { nombre: 'Irlanda', tipo: 'baja', periodo: 'MT', resultado: 'P' },
+              { nombre: 'Nigeria', tipo: 'alta', periodo: '1/4', resultado: 'G' }
             ],
             monto: 5000
           }
@@ -111,6 +131,25 @@ export default function Jugadas() {
     setCuentas(mockData);
   }, []);
 
+  // Sincronizar selección de jugadores
+  const handleJugadorChange = (jugador: string, source: 'jugada' | 'tripleta' | 'whatsappJugadas' | 'whatsappTripletas') => {
+    if (source === 'jugada') {
+      setNuevoJugador(jugador);
+    } else if (source === 'tripleta') {
+      setTripletaJugador(jugador);
+    } else if (source === 'whatsappJugadas') {
+      setWhatsappJugadasJugador(jugador);
+    } else if (source === 'whatsappTripletas') {
+      setWhatsappTripletasJugador(jugador);
+    }
+    
+    // Sincronizar con otros campos
+    setNuevoJugador(jugador);
+    setTripletaJugador(jugador);
+    setWhatsappJugadasJugador(jugador);
+    setWhatsappTripletasJugador(jugador);
+  };
+
   const handleAgregarJugada = () => {
     if (!nuevoEquipo || !nuevoMonto || !nuevoJugador) {
       Alert.alert('Error', 'Por favor completa todos los campos');
@@ -121,6 +160,7 @@ export default function Jugadas() {
       id: Date.now().toString(),
       equipo: nuevoEquipo,
       tipo: nuevoTipo,
+      periodo: nuevoPeriodo,
       monto: parseFloat(nuevoMonto)
     };
 
@@ -149,7 +189,6 @@ export default function Jugadas() {
     // Reset form
     setNuevoEquipo('');
     setNuevoMonto('');
-    setNuevoJugador('');
     Alert.alert('Éxito', 'Jugada agregada correctamente');
   };
 
@@ -189,25 +228,32 @@ export default function Jugadas() {
 
     // Reset form
     setTripletaEquipos([
-      { nombre: '', tipo: 'G' },
-      { nombre: '', tipo: 'G' },
-      { nombre: '', tipo: 'G' }
+      { nombre: '', tipo: '-', periodo: 'G' },
+      { nombre: '', tipo: '-', periodo: 'G' },
+      { nombre: '', tipo: '-', periodo: 'G' }
     ]);
     setTripletaMonto('');
-    setTripletaJugador('');
     Alert.alert('Éxito', 'Tripleta agregada correctamente');
   };
 
-  const procesarMensajeWhatsApp = () => {
-    if (!whatsappMessage.trim()) {
-      Alert.alert('Error', 'Por favor ingresa un mensaje de WhatsApp');
+  const procesarMensajeWhatsAppJugadas = () => {
+    if (!whatsappJugadasMessage.trim() || !whatsappJugadasJugador) {
+      Alert.alert('Error', 'Por favor ingresa un mensaje y selecciona un jugador');
       return;
     }
 
-    // Aquí iría la lógica para procesar el mensaje de WhatsApp
-    // Por ahora solo mostramos un mensaje de éxito
-    Alert.alert('Procesado', 'Mensaje de WhatsApp procesado correctamente');
-    setWhatsappMessage('');
+    Alert.alert('Procesado', 'Mensaje de jugadas procesado correctamente');
+    setWhatsappJugadasMessage('');
+  };
+
+  const procesarMensajeWhatsAppTripletas = () => {
+    if (!whatsappTripletasMessage.trim() || !whatsappTripletasJugador) {
+      Alert.alert('Error', 'Por favor ingresa un mensaje y selecciona un jugador');
+      return;
+    }
+
+    Alert.alert('Procesado', 'Mensaje de tripletas procesado correctamente');
+    setWhatsappTripletasMessage('');
   };
 
   const eliminarCuenta = (cuentaId: string) => {
@@ -225,12 +271,6 @@ export default function Jugadas() {
         }
       ]
     );
-  };
-
-  const getBalanceColor = (balance: number) => {
-    if (balance > 0) return '#10B981'; // Verde
-    if (balance < 0) return '#EF4444'; // Rojo
-    return '#6B7280'; // Gris
   };
 
   const getResultadoStyle = (resultado?: string) => {
@@ -253,57 +293,33 @@ export default function Jugadas() {
 
         {/* Formulario Jugadas Sencillas */}
         <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>Agregar Jugada</Text>
-          
-          <View style={styles.formRow}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Jugador</Text>
-              <TextInput
-                style={styles.input}
-                value={nuevoJugador}
-                onChangeText={setNuevoJugador}
-                placeholder="Nombre del jugador"
-              />
-            </View>
-          </View>
-
-          <View style={styles.formRow}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Equipo</Text>
-              <TextInput
-                style={styles.input}
-                value={nuevoEquipo}
-                onChangeText={setNuevoEquipo}
-                placeholder="Nombre del equipo"
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Tipo</Text>
-              <View style={styles.tipoSelector}>
-                {(['G', 'P', 'X'] as const).map((tipo) => (
-                  <TouchableOpacity
-                    key={tipo}
-                    style={[
-                      styles.tipoButton,
-                      nuevoTipo === tipo && styles.tipoButtonActive
-                    ]}
-                    onPress={() => setNuevoTipo(tipo)}
-                  >
-                    <Text style={[
-                      styles.tipoButtonText,
-                      nuevoTipo === tipo && styles.tipoButtonTextActive
-                    ]}>
-                      {tipo}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Agregar Jugada</Text>
+            <View style={styles.jugadorContainer}>
+              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <View style={styles.jugadorDropdown}>
+                <SearchableDropdown
+                  options={jugadores}
+                  value={nuevoJugador}
+                  onSelect={(jugador) => handleJugadorChange(jugador, 'jugada')}
+                  placeholder="Seleccionar jugador"
+                />
               </View>
             </View>
           </View>
 
           <View style={styles.formRow}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Monto</Text>
+              <Text style={styles.inputLabel}>Team</Text>
+              <SearchableDropdown
+                options={equipos}
+                value={nuevoEquipo}
+                onSelect={setNuevoEquipo}
+                placeholder="Seleccionar equipo"
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Money</Text>
               <TextInput
                 style={styles.input}
                 value={nuevoMonto}
@@ -314,75 +330,129 @@ export default function Jugadas() {
             </View>
           </View>
 
+          <View style={styles.radioRow}>
+            <View style={styles.radioGroup}>
+              {(['-', 'alta', 'baja'] as const).map((tipo) => (
+                <TouchableOpacity
+                  key={tipo}
+                  style={styles.radioOption}
+                  onPress={() => setNuevoTipo(tipo)}
+                >
+                  <View style={[
+                    styles.radioCircle,
+                    nuevoTipo === tipo && styles.radioSelected
+                  ]}>
+                    {nuevoTipo === tipo && <View style={styles.radioInner} />}
+                  </View>
+                  <Text style={styles.radioLabel}>{tipo}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.radioGroup}>
+              {(['G', 'MT', '1/4'] as const).map((periodo) => (
+                <TouchableOpacity
+                  key={periodo}
+                  style={styles.radioOption}
+                  onPress={() => setNuevoPeriodo(periodo)}
+                >
+                  <View style={[
+                    styles.radioCircle,
+                    nuevoPeriodo === periodo && styles.radioSelected
+                  ]}>
+                    {nuevoPeriodo === periodo && <View style={styles.radioInner} />}
+                  </View>
+                  <Text style={styles.radioLabel}>{periodo}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           <TouchableOpacity style={styles.addButton} onPress={handleAgregarJugada}>
-            <Plus size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Agregar Jugada</Text>
+            <Text style={styles.addButtonText}>Agregar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* WhatsApp Jugadas Sencillas */}
+        <View style={styles.formSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Agregar Jugadas desde WhatsApp</Text>
+            <View style={styles.jugadorContainer}>
+              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <View style={styles.jugadorDropdown}>
+                <SearchableDropdown
+                  options={jugadores}
+                  value={whatsappJugadasJugador}
+                  onSelect={(jugador) => handleJugadorChange(jugador, 'whatsappJugadas')}
+                  placeholder="Seleccionar jugador"
+                />
+              </View>
+            </View>
+          </View>
+          
+          <TextInput
+            style={styles.textArea}
+            value={whatsappJugadasMessage}
+            onChangeText={setWhatsappJugadasMessage}
+            placeholder="Pega los mensajes aquí..."
+            multiline
+            numberOfLines={4}
+          />
+          <TouchableOpacity style={styles.processButton} onPress={procesarMensajeWhatsAppJugadas}>
+            <Text style={styles.processButtonText}>Agregar</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* WhatsApp Tripletas */}
+        <View style={styles.formSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Agregar Tripletas desde WhatsApp</Text>
+            <View style={styles.jugadorContainer}>
+              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <View style={styles.jugadorDropdown}>
+                <SearchableDropdown
+                  options={jugadores}
+                  value={whatsappTripletasJugador}
+                  onSelect={(jugador) => handleJugadorChange(jugador, 'whatsappTripletas')}
+                  placeholder="Seleccionar jugador"
+                />
+              </View>
+            </View>
+          </View>
+          
+          <TextInput
+            style={styles.textArea}
+            value={whatsappTripletasMessage}
+            onChangeText={setWhatsappTripletasMessage}
+            placeholder="Pega los mensajes aquí..."
+            multiline
+            numberOfLines={4}
+          />
+          <TouchableOpacity style={styles.processButton} onPress={procesarMensajeWhatsAppTripletas}>
+            <Text style={styles.processButtonText}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {/* Formulario Tripletas */}
         <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>Agregar Tripleta</Text>
-          
-          <View style={styles.formRow}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Jugador</Text>
-              <TextInput
-                style={styles.input}
-                value={tripletaJugador}
-                onChangeText={setTripletaJugador}
-                placeholder="Nombre del jugador"
-              />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Agregar Jugada Tripleta</Text>
+            <View style={styles.jugadorContainer}>
+              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <View style={styles.jugadorDropdown}>
+                <SearchableDropdown
+                  options={jugadores}
+                  value={tripletaJugador}
+                  onSelect={(jugador) => handleJugadorChange(jugador, 'tripleta')}
+                  placeholder="Seleccionar jugador"
+                />
+              </View>
             </View>
           </View>
 
-          {tripletaEquipos.map((equipo, index) => (
-            <View key={index} style={styles.formRow}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Equipo {index + 1}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={equipo.nombre}
-                  onChangeText={(text) => {
-                    const newEquipos = [...tripletaEquipos];
-                    newEquipos[index].nombre = text;
-                    setTripletaEquipos(newEquipos);
-                  }}
-                  placeholder="Nombre del equipo"
-                />
-              </View>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Tipo</Text>
-                <View style={styles.tipoSelector}>
-                  {(['G', 'P', 'X'] as const).map((tipo) => (
-                    <TouchableOpacity
-                      key={tipo}
-                      style={[
-                        styles.tipoButton,
-                        equipo.tipo === tipo && styles.tipoButtonActive
-                      ]}
-                      onPress={() => {
-                        const newEquipos = [...tripletaEquipos];
-                        newEquipos[index].tipo = tipo;
-                        setTripletaEquipos(newEquipos);
-                      }}
-                    >
-                      <Text style={[
-                        styles.tipoButtonText,
-                        equipo.tipo === tipo && styles.tipoButtonTextActive
-                      ]}>
-                        {tipo}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          ))}
-
           <View style={styles.formRow}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Monto</Text>
+              <Text style={styles.inputLabel}>Money</Text>
               <TextInput
                 style={styles.input}
                 value={tripletaMonto}
@@ -393,26 +463,75 @@ export default function Jugadas() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.addButton} onPress={handleAgregarTripleta}>
-            <Target size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Agregar Tripleta</Text>
-          </TouchableOpacity>
-        </View>
+          {tripletaEquipos.map((equipo, index) => (
+            <View key={index} style={styles.tripletaTeamSection}>
+              <Text style={styles.teamLabel}>Team {index + 1}</Text>
+              
+              <View style={styles.formRow}>
+                <View style={styles.inputGroup}>
+                  <SearchableDropdown
+                    options={equipos}
+                    value={equipo.nombre}
+                    onSelect={(nombre) => {
+                      const newEquipos = [...tripletaEquipos];
+                      newEquipos[index].nombre = nombre;
+                      setTripletaEquipos(newEquipos);
+                    }}
+                    placeholder="Seleccionar equipo"
+                  />
+                </View>
+              </View>
 
-        {/* WhatsApp Message Processor */}
-        <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>Procesar Mensaje WhatsApp</Text>
-          <TextInput
-            style={styles.textArea}
-            value={whatsappMessage}
-            onChangeText={setWhatsappMessage}
-            placeholder="Pega aquí el mensaje de WhatsApp..."
-            multiline
-            numberOfLines={4}
-          />
-          <TouchableOpacity style={styles.processButton} onPress={procesarMensajeWhatsApp}>
-            <RefreshCw size={20} color="#FFFFFF" />
-            <Text style={styles.processButtonText}>Procesar Mensaje</Text>
+              <View style={styles.radioRow}>
+                <View style={styles.radioGroup}>
+                  {(['-', 'alta', 'baja'] as const).map((tipo) => (
+                    <TouchableOpacity
+                      key={tipo}
+                      style={styles.radioOption}
+                      onPress={() => {
+                        const newEquipos = [...tripletaEquipos];
+                        newEquipos[index].tipo = tipo;
+                        setTripletaEquipos(newEquipos);
+                      }}
+                    >
+                      <View style={[
+                        styles.radioCircle,
+                        equipo.tipo === tipo && styles.radioSelected
+                      ]}>
+                        {equipo.tipo === tipo && <View style={styles.radioInner} />}
+                      </View>
+                      <Text style={styles.radioLabel}>{tipo}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.radioGroup}>
+                  {(['G', 'MT', '1/4'] as const).map((periodo) => (
+                    <TouchableOpacity
+                      key={periodo}
+                      style={styles.radioOption}
+                      onPress={() => {
+                        const newEquipos = [...tripletaEquipos];
+                        newEquipos[index].periodo = periodo;
+                        setTripletaEquipos(newEquipos);
+                      }}
+                    >
+                      <View style={[
+                        styles.radioCircle,
+                        equipo.periodo === periodo && styles.radioSelected
+                      ]}>
+                        {equipo.periodo === periodo && <View style={styles.radioInner} />}
+                      </View>
+                      <Text style={styles.radioLabel}>{periodo}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.addButton} onPress={handleAgregarTripleta}>
+            <Text style={styles.addButtonText}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
@@ -454,7 +573,6 @@ export default function Jugadas() {
               </View>
 
               {/* Jugadas Sencillas */}
-              {/* Primera Sección: Jugadas Sencillas G/P */}
               {cuenta.jugadas.length > 0 && (
                 <View style={styles.jugadasSection}>
                   <View style={styles.jugadasColumns}>
@@ -465,9 +583,10 @@ export default function Jugadas() {
                         .filter(jugada => jugada.resultado === 'G')
                         .map((jugada, index) => (
                           <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={styles.jugadaEquipoText}>{jugada.monto} {jugada.equipo}
-                              {jugada.tipo === 'P' ? ' ↓' : jugada.tipo === 'G' ? ' ↑' : ''}
-                              {jugada.section === 'MT' ? ' MT' : jugada.section === '1/4' ? ' 1/4' : ''}
+                            <Text style={styles.jugadaEquipoText}>
+                              {jugada.monto} {jugada.equipo} 
+                              {jugada.periodo == 'G'? '':jugada.periodo} 
+                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
                             </Text>
                           </View>
                         ))}
@@ -480,9 +599,10 @@ export default function Jugadas() {
                         .filter(jugada => jugada.resultado === 'P')
                         .map((jugada, index) => (
                           <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={styles.jugadaEquipoText}>{jugada.monto} {jugada.equipo}
-                              {jugada.tipo === 'P' ? ' ↓' : jugada.tipo === 'G' ? ' ↑' : ''}
-                              {jugada.section === 'MT' ? ' MT' : jugada.section === '1/4' ? ' 1/4' : ''}
+                            <Text style={styles.jugadaEquipoText}>
+                              {jugada.monto} {jugada.equipo} 
+                              {jugada.periodo == 'G'? '':jugada.periodo} 
+                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
                             </Text>
                           </View>
                         ))}
@@ -491,11 +611,10 @@ export default function Jugadas() {
                 </View>
               )}
 
-              {/* Segunda Sección: Tripletas (solo si tiene tripletas) */}
+              {/* Tripletas */}
               {cuenta.tripletas.length > 0 && (
                 <View style={styles.tripletasSection}>
                   <View style={styles.tripletasColumns}>
-                    {/* Columna Izquierda: C, L, P, F */}
                     <View style={styles.tripletasColumn}>
                       <View style={styles.tripletaRow}>
                         <Text style={styles.tripletaLabel}>C:</Text>
@@ -515,10 +634,8 @@ export default function Jugadas() {
                       </View>
                     </View>
 
-                    {/* Columna Derecha: I, II, III */}
                     <View style={styles.tripletasColumn}>
                       <View style={styles.tripletaTypeColumns}>
-                        {/* Columna I */}
                         <View style={styles.tripletaTypeColumn}>
                           <Text style={styles.tripletaTypeLabel}>I</Text>
                           <Text style={styles.tripletaTypeValue}>0</Text>
@@ -527,7 +644,6 @@ export default function Jugadas() {
                           <Text style={styles.tripletaTypeTotalValue}>0</Text>
                         </View>
                         
-                        {/* Columna II */}
                         <View style={styles.tripletaTypeColumn}>
                           <Text style={styles.tripletaTypeLabel}>II</Text>
                           <Text style={styles.tripletaTypeValue}>5000</Text>
@@ -536,7 +652,6 @@ export default function Jugadas() {
                           <Text style={styles.tripletaTypeTotalValue}>60000</Text>
                         </View>
                         
-                        {/* Columna III */}
                         <View style={styles.tripletaTypeColumn}>
                           <Text style={styles.tripletaTypeLabel}>III</Text>
                           <Text style={styles.tripletaTypeValue}>0</Text>
@@ -550,10 +665,9 @@ export default function Jugadas() {
                 </View>
               )}
 
-              {/* Tercera Sección: Cálculo Final */}
+              {/* Cálculo Final */}
               <View style={styles.finalCalculationSection}>
                 <View style={styles.finalCalculationColumns}>
-                  {/* Columna Ganado */}
                   <View style={styles.finalCalculationColumn}>
                     <View style={styles.calculationItem}>
                       <Text style={styles.calculationValue}>+11000 (2%)</Text>
@@ -570,7 +684,6 @@ export default function Jugadas() {
                     </View>
                   </View>
 
-                  {/* Columna Perdido */}
                   <View style={styles.finalCalculationColumn}>
                     <View style={styles.calculationItem}>
                       <Text style={styles.calculationValue}>-102500</Text>
@@ -647,11 +760,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 16,
+    flex: 1,
+  },
+  jugadorContainer: {
+    alignItems: 'flex-end',
+  },
+  jugadorLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  jugadorDropdown: {
+    minWidth: 150,
   },
   formRow: {
     flexDirection: 'row',
@@ -688,39 +819,59 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginBottom: 16,
   },
-  tipoSelector: {
+  radioRow: {
     flexDirection: 'row',
-    gap: 4,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  tipoButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  radioOption: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
-  tipoButtonActive: {
-    backgroundColor: '#4F46E5',
+  radioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#4F46E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
     borderColor: '#4F46E5',
   },
-  tipoButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4F46E5',
   },
-  tipoButtonTextActive: {
-    color: '#FFFFFF',
+  radioLabel: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  tripletaTeamSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  teamLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
   },
   addButton: {
     backgroundColor: '#4F46E5',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 8,
-    gap: 8,
+    alignItems: 'center',
   },
   addButtonText: {
     color: '#FFFFFF',
@@ -729,12 +880,9 @@ const styles = StyleSheet.create({
   },
   processButton: {
     backgroundColor: '#10B981',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 8,
-    gap: 8,
+    alignItems: 'center',
   },
   processButtonText: {
     color: '#FFFFFF',
@@ -811,27 +959,6 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     fontWeight: '500',
   },
-  jugadaDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  arrowUp: {
-    fontSize: 12,
-    color: '#10B981',
-    fontWeight: 'bold',
-  },
-  arrowDown: {
-    fontSize: 12,
-    color: '#EF4444',
-    fontWeight: 'bold',
-  },
-  periodText: {
-    fontSize: 10,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
   tripletasSection: {
     marginBottom: 20,
   },
@@ -859,19 +986,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F2937',
   },
-  tripletaTypeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 4,
-    marginBottom: 8,
-  },
-  tripletaTypeLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
   tripletaTypeColumns: {
     flexDirection: 'row',
     flex: 1,
@@ -880,6 +994,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 4,
+  },
+  tripletaTypeLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   tripletaTypeValue: {
     fontSize: 12,
@@ -893,11 +1014,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F2937',
     width: '80%',
     marginVertical: 4,
-  },
-  tripletaSeparator: {
-    height: 1,
-    backgroundColor: '#1F2937',
-    marginVertical: 8,
   },
   tripletaTypeTotalValue: {
     fontSize: 14,
