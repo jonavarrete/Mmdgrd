@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Eye, Target, Trash2, Send, RefreshCw } from 'lucide-react-native';
+import { Plus, Eye, Target, Trash2, Send, RefreshCw, CreditCard as Edit, X } from 'lucide-react-native';
 import JugadasModal from '@/components/JugadasModal';
 import TripletasModal from '@/components/TripletasModal';
+import EditJugadaModal from '@/components/EditJugadaModal';
+import EditTripletaModal from '@/components/EditTripletaModal';
 import SearchableDropdown from '@/components/SearchableDropdown';
 import { useDate } from '@/contexts/DateContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,6 +49,13 @@ export default function Jugadas() {
   const [showJugadasModal, setShowJugadasModal] = useState(false);
   const [showTripletasModal, setShowTripletasModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<CuentaJugador | null>(null);
+  const [showEditJugadaModal, setShowEditJugadaModal] = useState(false);
+  const [showEditTripletaModal, setShowEditTripletaModal] = useState(false);
+  const [selectedJugada, setSelectedJugada] = useState<Jugada | null>(null);
+  const [selectedTripleta, setSelectedTripleta] = useState<Tripleta | null>(null);
+  
+  // Hover states for individual jugadas
+  const [hoveredJugada, setHoveredJugada] = useState<string | null>(null);
   
   // Form states para jugadas sencillas
   const [nuevoEquipo, setNuevoEquipo] = useState('');
@@ -437,6 +446,96 @@ export default function Jugadas() {
     setWhatsappTripletasMessage('');
   };
 
+  const handleEditJugada = (jugada: Jugada) => {
+    setSelectedJugada(jugada);
+    setShowEditJugadaModal(true);
+  };
+
+  const handleDeleteJugada = (jugadaId: string) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Estás seguro de que quieres eliminar esta jugada?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Eliminar', 
+          style: 'destructive',
+          onPress: () => {
+            setCuentas(prev => prev.map(cuenta => ({
+              ...cuenta,
+              jugadas: cuenta.jugadas.filter(j => j.id !== jugadaId)
+            })));
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSaveJugada = (updatedJugada: Jugada) => {
+    setCuentas(prev => prev.map(cuenta => ({
+      ...cuenta,
+      jugadas: cuenta.jugadas.map(j => j.id === updatedJugada.id ? updatedJugada : j)
+    })));
+  };
+
+  const handleEditTripleta = (tripleta: Tripleta) => {
+    setSelectedTripleta(tripleta);
+    setShowEditTripletaModal(true);
+  };
+
+  const handleDeleteTripleta = (tripletaId: string) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Estás seguro de que quieres eliminar esta tripleta?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Eliminar', 
+          style: 'destructive',
+          onPress: () => {
+            setCuentas(prev => prev.map(cuenta => ({
+              ...cuenta,
+              tripletas: cuenta.tripletas.filter(t => t.id !== tripletaId)
+            })));
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSaveTripleta = (updatedTripleta: Tripleta) => {
+    setCuentas(prev => prev.map(cuenta => ({
+      ...cuenta,
+      tripletas: cuenta.tripletas.map(t => t.id === updatedTripleta.id ? updatedTripleta : t)
+    })));
+  };
+
+  const handleEditJugadaInline = (jugada: Jugada) => {
+    setSelectedJugada(jugada);
+    setShowEditJugadaModal(true);
+  };
+
+  const handleDeleteJugadaInline = (jugadaId: string, playerName: string) => {
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Estás seguro de que quieres eliminar esta jugada?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Eliminar', 
+          style: 'destructive',
+          onPress: () => {
+            setCuentas(prev => prev.map(cuenta => 
+              cuenta.nombre === playerName
+                ? { ...cuenta, jugadas: cuenta.jugadas.filter(j => j.id !== jugadaId) }
+                : cuenta
+            ));
+          }
+        }
+      ]
+    );
+  };
+
   const eliminarCuenta = (cuentaId: string) => {
     Alert.alert(
       'Confirmar eliminación',
@@ -774,12 +873,38 @@ export default function Jugadas() {
                       {cuenta.jugadas
                         .filter(jugada => jugada.resultado === 'G')
                         .map((jugada, index) => (
-                          <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
-                              {jugada.monto} {jugada.equipo} 
-                               {jugada.periodo == 'G'? '':jugada.periodo} 
-                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
-                            </Text>
+                          <View 
+                            key={jugada.id} 
+                            style={[
+                              styles.jugadaItem,
+                              Platform.OS === 'web' && styles.jugadaItemHoverable
+                            ]}
+                            onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
+                            onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
+                          >
+                            <View style={styles.jugadaContent}>
+                              <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
+                                {jugada.monto} {jugada.equipo} 
+                                 {jugada.periodo == 'G'? '':jugada.periodo} 
+                                {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
+                              </Text>
+                              {(hoveredJugada === jugada.id || Platform.OS !== 'web') && (
+                                <View style={styles.jugadaActions}>
+                                  <TouchableOpacity
+                                    style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
+                                    onPress={() => handleEditJugadaInline(jugada)}
+                                  >
+                                    <Edit size={12} color="#FFFFFF" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
+                                    onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
+                                  >
+                                    <X size={12} color="#FFFFFF" />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
                           </View>
                         ))}
                     </View>
@@ -790,12 +915,38 @@ export default function Jugadas() {
                       {cuenta.jugadas
                         .filter(jugada => jugada.resultado === 'P')
                         .map((jugada, index) => (
-                          <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
-                              {jugada.monto} {jugada.equipo} 
-                               {jugada.periodo == 'G'? '': jugada.periodo} 
-                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
-                            </Text>
+                          <View 
+                            key={jugada.id} 
+                            style={[
+                              styles.jugadaItem,
+                              Platform.OS === 'web' && styles.jugadaItemHoverable
+                            ]}
+                            onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
+                            onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
+                          >
+                            <View style={styles.jugadaContent}>
+                              <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
+                                {jugada.monto} {jugada.equipo} 
+                                 {jugada.periodo == 'G'? '': jugada.periodo} 
+                                {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
+                              </Text>
+                              {(hoveredJugada === jugada.id || Platform.OS !== 'web') && (
+                                <View style={styles.jugadaActions}>
+                                  <TouchableOpacity
+                                    style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
+                                    onPress={() => handleEditJugadaInline(jugada)}
+                                  >
+                                    <Edit size={12} color="#FFFFFF" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
+                                    onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
+                                  >
+                                    <X size={12} color="#FFFFFF" />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
                           </View>
                         ))}
                     </View>
@@ -903,12 +1054,30 @@ export default function Jugadas() {
         visible={showJugadasModal}
         onClose={() => setShowJugadasModal(false)}
         player={selectedPlayer}
+        onEdit={handleEditJugada}
+        onDelete={handleDeleteJugada}
       />
       
       <TripletasModal
         visible={showTripletasModal}
         onClose={() => setShowTripletasModal(false)}
         player={selectedPlayer}
+        onEdit={handleEditTripleta}
+        onDelete={handleDeleteTripleta}
+      />
+
+      <EditJugadaModal
+        visible={showEditJugadaModal}
+        onClose={() => setShowEditJugadaModal(false)}
+        jugada={selectedJugada}
+        onSave={handleSaveJugada}
+      />
+
+      <EditTripletaModal
+        visible={showEditTripletaModal}
+        onClose={() => setShowEditTripletaModal(false)}
+        tripleta={selectedTripleta}
+        onSave={handleSaveTripleta}
       />
     </SafeAreaView>
   );
@@ -1117,10 +1286,31 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
+    position: 'relative',
+  },
+  jugadaItemHoverable: {
+    cursor: 'pointer',
+  },
+  jugadaContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   jugadaEquipoText: {
     fontSize: 12,
     fontWeight: '500',
+    flex: 1,
+  },
+  jugadaActions: {
+    flexDirection: 'row',
+    gap: 4,
+    marginLeft: 8,
+  },
+  jugadaActionButton: {
+    padding: 4,
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tripletasSection: {
     marginBottom: 20,

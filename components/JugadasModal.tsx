@@ -14,7 +14,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 interface Jugada {
   id: string;
   equipo: string;
-  tipo: 'G' | 'P' | 'X';
+  tipo: '-' | 'alta' | 'baja';
+  periodo: 'G' | 'MT' | '1/4';
   monto: number;
   resultado?: 'G' | 'P' | 'X';
 }
@@ -77,7 +78,9 @@ export default function JugadasModal({ visible, onClose, player, onEdit, onDelet
                 <View style={styles.jugadaContent}>
                   <View style={styles.jugadaInfo}>
                     <Text style={[styles.jugadaText, { color: colors.text }]}>
-                      - {jugada.monto} {jugada.equipo} {jugada.tipo} {jugada.periodo !== 'G' ? jugada.periodo : ''}
+                      {jugada.monto} {jugada.equipo} 
+                      {jugada.periodo !== 'G' ? ` ${jugada.periodo}` : ''}
+                      {jugada.tipo === 'alta' ? ' ↑' : jugada.tipo === 'baja' ? ' ↓' : ''}
                     </Text>
                   </View>
                   

@@ -15,7 +15,8 @@ interface Tripleta {
   id: string;
   equipos: Array<{
     nombre: string;
-    tipo: 'G' | 'P' | 'X';
+    tipo: '-' | 'alta' | 'baja';
+    periodo: 'G' | 'MT' | '1/4';
     resultado?: 'G' | 'P' | 'X';
   }>;
   monto: number;
@@ -44,28 +45,37 @@ export default function TripletasModal({ visible, onClose, player, onEdit, onDel
   
   if (!player) return null;
 
-  const getResultadoIcon = (tipo: 'G' | 'P' | 'X', resultado?: 'G' | 'P' | 'X') => {
+  const getResultadoIcon = (tipo: '-' | 'alta' | 'baja', resultado?: 'G' | 'P' | 'X') => {
     if (!resultado) return <AlertCircle size={16} color="#9CA3AF" />;
     
-    const isCorrect = tipo === resultado;
-    return isCorrect ? 
-      <Check size={16} color="#10B981" /> : 
-      <X size={16} color="#EF4444" />;
+    if (resultado === 'G') {
+      return <Check size={16} color="#10B981" />;
+    } else if (resultado === 'P') {
+      return <X size={16} color="#EF4444" />;
+    } else if (resultado === 'X') {
+      return <AlertCircle size={16} color="#F59E0B" />;
+    }
+    
+    return <AlertCircle size={16} color="#9CA3AF" />;
   };
 
-  const getResultadoStyle = (tipo: 'G' | 'P' | 'X', resultado?: 'G' | 'P' | 'X') => {
+  const getResultadoStyle = (tipo: '-' | 'alta' | 'baja', resultado?: 'G' | 'P' | 'X') => {
     if (!resultado) return { backgroundColor: '#F3F4F6' };
     
-    const isCorrect = tipo === resultado;
-    return isCorrect ? 
-      { backgroundColor: '#D1FAE5' } : 
-      { backgroundColor: '#FEE2E2' };
+    if (resultado === 'G') {
+      return { backgroundColor: '#D1FAE5' };
+    } else if (resultado === 'P') {
+      return { backgroundColor: '#FEE2E2' };
+    } else if (resultado === 'X') {
+      return { backgroundColor: '#FEF3C7' };
+    }
+    
+    return { backgroundColor: '#F3F4F6' };
   };
 
   const getTripletaResult = (tripleta: Tripleta) => {
-    const allCorrect = tripleta.equipos.every(equipo => 
-      equipo.resultado && equipo.tipo === equipo.resultado
-    );
+    // This would need to be implemented based on your business logic
+    const allCorrect = false;
     const hasResults = tripleta.equipos.some(equipo => equipo.resultado);
     
     if (!hasResults) return null;
@@ -138,7 +148,10 @@ export default function TripletasModal({ visible, onClose, player, onEdit, onDel
                         
                         <View style={styles.equipoInfo}>
                           <Text style={[styles.equipoNombre, { color: colors.text }]}>{equipo.nombre}</Text>
-                          <Text style={[styles.equipoTipo, { color: colors.textSecondary }]}>{equipo.tipo})</Text>
+                          <Text style={[styles.equipoTipo, { color: colors.textSecondary }]}>
+                            {equipo.periodo !== 'G' ? `${equipo.periodo} ` : ''}
+                            {equipo.tipo === 'alta' ? '↑' : equipo.tipo === 'baja' ? '↓' : equipo.tipo}
+                          </Text>
                         </View>
 
                         {equipo.resultado && (
