@@ -5,6 +5,8 @@ import { Plus, Eye, Target, Trash2, Send, RefreshCw } from 'lucide-react-native'
 import JugadasModal from '@/components/JugadasModal';
 import TripletasModal from '@/components/TripletasModal';
 import SearchableDropdown from '@/components/SearchableDropdown';
+import { useDate } from '@/contexts/DateContext';
+import DateSelector from '@/components/DateSelector';
 
 interface Jugada {
   id: string;
@@ -39,6 +41,7 @@ interface CuentaJugador {
 
 export default function Jugadas() {
   const [cuentas, setCuentas] = useState<CuentaJugador[]>([]);
+  const { getDateString, getFormattedDate } = useDate();
   const [showJugadasModal, setShowJugadasModal] = useState(false);
   const [showTripletasModal, setShowTripletasModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<CuentaJugador | null>(null);
@@ -156,13 +159,58 @@ export default function Jugadas() {
       return;
     }
 
+    console.log('Adding jugada for date:', getDateString());
+
     const nuevaJugada: Jugada = {
       id: Date.now().toString(),
       equipo: nuevoEquipo,
       tipo: nuevoTipo,
       periodo: nuevoPeriodo,
-      monto: parseFloat(nuevoMonto)
+      monto: parseFloat(nuevoMonto),
     };
+
+    // Enviar a la API
+    const jugadaData = {
+      date: getDateString(),
+      player: nuevoJugador,
+      team: nuevoEquipo,
+      type: nuevoTipo,
+      period: nuevoPeriodo,
+      amount: parseFloat(nuevoMonto)
+    };
+
+    console.log('Jugada data to send:', JSON.stringify(jugadaData, null, 2));
+
+    // Llamada a la API (comentada por ahora para testing local)
+    /*
+    fetch('https://midgard.ct.ws/add_jugada', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'MidgardApp/1.0',
+      },
+      body: JSON.stringify(jugadaData)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      console.log('Jugada response:', responseText);
+      try {
+        const data = JSON.parse(responseText);
+        if (data.success || data.status) {
+          Alert.alert('Éxito', 'Jugada agregada correctamente');
+        } else {
+          Alert.alert('Error', data.message || 'Error al agregar jugada');
+        }
+      } catch (parseError) {
+        Alert.alert('Éxito', 'Jugada agregada correctamente');
+      }
+    })
+    .catch(error => {
+      console.error('Error adding jugada:', error);
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
+    });
+    */
 
     setCuentas(prev => {
       const cuentaExistente = prev.find(c => c.nombre === nuevoJugador);
@@ -198,11 +246,58 @@ export default function Jugadas() {
       return;
     }
 
+    console.log('Adding tripleta for date:', getDateString());
+
     const nuevaTripleta: Tripleta = {
       id: Date.now().toString(),
       equipos: [...tripletaEquipos],
-      monto: parseFloat(tripletaMonto)
+      monto: parseFloat(tripletaMonto),
     };
+
+    // Enviar a la API
+    const tripletaData = {
+      date: getDateString(),
+      player: tripletaJugador,
+      amount: parseFloat(tripletaMonto),
+      teams: tripletaEquipos.map(equipo => ({
+        name: equipo.nombre,
+        type: equipo.tipo,
+        period: equipo.periodo
+      }))
+    };
+
+    console.log('Tripleta data to send:', JSON.stringify(tripletaData, null, 2));
+
+    // Llamada a la API (comentada por ahora para testing local)
+    /*
+    fetch('https://midgard.ct.ws/add_tripleta', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'MidgardApp/1.0',
+      },
+      body: JSON.stringify(tripletaData)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      console.log('Tripleta response:', responseText);
+      try {
+        const data = JSON.parse(responseText);
+        if (data.success || data.status) {
+          Alert.alert('Éxito', 'Tripleta agregada correctamente');
+        } else {
+          Alert.alert('Error', data.message || 'Error al agregar tripleta');
+        }
+      } catch (parseError) {
+        Alert.alert('Éxito', 'Tripleta agregada correctamente');
+      }
+    })
+    .catch(error => {
+      console.error('Error adding tripleta:', error);
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
+    });
+    */
 
     setCuentas(prev => {
       const cuentaExistente = prev.find(c => c.nombre === tripletaJugador);
@@ -242,6 +337,48 @@ export default function Jugadas() {
       return;
     }
 
+    console.log('Procesando jugadas para fecha:', getDateString());
+    
+    const whatsappData = {
+      date: getDateString(),
+      player: whatsappJugadasJugador,
+      message: whatsappJugadasMessage.trim(),
+      type: 'jugadas'
+    };
+
+    console.log('WhatsApp jugadas data:', JSON.stringify(whatsappData, null, 2));
+
+    // Llamada a la API (comentada por ahora para testing local)
+    /*
+    fetch('https://midgard.ct.ws/process_whatsapp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'MidgardApp/1.0',
+      },
+      body: JSON.stringify(whatsappData)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      console.log('WhatsApp jugadas response:', responseText);
+      try {
+        const data = JSON.parse(responseText);
+        if (data.success || data.status) {
+          Alert.alert('Procesado', 'Mensaje de jugadas procesado correctamente');
+        } else {
+          Alert.alert('Error', data.message || 'Error al procesar mensaje');
+        }
+      } catch (parseError) {
+        Alert.alert('Procesado', 'Mensaje de jugadas procesado correctamente');
+      }
+    })
+    .catch(error => {
+      console.error('Error processing WhatsApp jugadas:', error);
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
+    });
+    */
+
     Alert.alert('Procesado', 'Mensaje de jugadas procesado correctamente');
     setWhatsappJugadasMessage('');
   };
@@ -251,6 +388,48 @@ export default function Jugadas() {
       Alert.alert('Error', 'Por favor ingresa un mensaje y selecciona un jugador');
       return;
     }
+
+    console.log('Procesando tripletas para fecha:', getDateString());
+    
+    const whatsappData = {
+      date: getDateString(),
+      player: whatsappTripletasJugador,
+      message: whatsappTripletasMessage.trim(),
+      type: 'tripletas'
+    };
+
+    console.log('WhatsApp tripletas data:', JSON.stringify(whatsappData, null, 2));
+
+    // Llamada a la API (comentada por ahora para testing local)
+    /*
+    fetch('https://midgard.ct.ws/process_whatsapp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'MidgardApp/1.0',
+      },
+      body: JSON.stringify(whatsappData)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      console.log('WhatsApp tripletas response:', responseText);
+      try {
+        const data = JSON.parse(responseText);
+        if (data.success || data.status) {
+          Alert.alert('Procesado', 'Mensaje de tripletas procesado correctamente');
+        } else {
+          Alert.alert('Error', data.message || 'Error al procesar mensaje');
+        }
+      } catch (parseError) {
+        Alert.alert('Procesado', 'Mensaje de tripletas procesado correctamente');
+      }
+    })
+    .catch(error => {
+      console.error('Error processing WhatsApp tripletas:', error);
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
+    });
+    */
 
     Alert.alert('Procesado', 'Mensaje de tripletas procesado correctamente');
     setWhatsappTripletasMessage('');
@@ -288,8 +467,11 @@ export default function Jugadas() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Jugadas</Text>
+          <Text style={styles.subtitle}>Jugadas - {getFormattedDate()}</Text>
         </View>
+
+        {/* Date Selector */}
+        <DateSelector />
 
         {/* Formulario Jugadas Sencillas */}
         <View style={styles.formSection}>
@@ -585,8 +767,8 @@ export default function Jugadas() {
                           <View key={jugada.id} style={styles.jugadaItem}>
                             <Text style={styles.jugadaEquipoText}>
                               {jugada.monto} {jugada.equipo} 
-                              {jugada.periodo == 'G'? '':jugada.periodo} 
-                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
+                               {jugada.periodo == 'G'? '':jugada.periodo} 
+                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
                             </Text>
                           </View>
                         ))}
@@ -601,8 +783,8 @@ export default function Jugadas() {
                           <View key={jugada.id} style={styles.jugadaItem}>
                             <Text style={styles.jugadaEquipoText}>
                               {jugada.monto} {jugada.equipo} 
-                              {jugada.periodo == 'G'? '':jugada.periodo} 
-                              {jugada.tipo == 'alta'? '↑':jugada.tipo == 'baja'?'':'↓'}
+                               {jugada.periodo == 'G'? '': jugada.periodo} 
+                              {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
                             </Text>
                           </View>
                         ))}

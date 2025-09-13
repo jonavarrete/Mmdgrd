@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RefreshCw, CreditCard as Edit, Zap, ChevronDown } from 'lucide-react-native';
 import PikeModal from '@/components/PikeModal';
+import { useDate } from '@/contexts/DateContext';
 
 interface Game {
   id: string;
@@ -30,18 +31,15 @@ interface Game {
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [games, setGames] = useState<Game[]>([]);
-  const [selectedDate, setSelectedDate] = useState({
-    day: 12,
-    month: 9,
-    year: 2025
-  });
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  
+  const { selectedDate, setSelectedDate, getDateString } = useDate();
 
   const handleUpdateScores = async () => {
     setIsLoading(true);
     try {
-      const dateString = `${selectedDate.year}-${selectedDate.month.toString().padStart(2, '0')}-${selectedDate.day.toString().padStart(2, '0')}`;
+      const dateString = getDateString();
       
       const response = await fetch('https://midgard.ct.ws/public/get_scores', {
         method: 'POST',
@@ -100,17 +98,15 @@ export default function Dashboard() {
   };
 
   const updateDate = (field: 'day' | 'month' | 'year', increment: boolean) => {
-    setSelectedDate(prev => {
-      const newDate = { ...prev };
-      if (field === 'day') {
-        newDate.day = increment ? Math.min(31, prev.day + 1) : Math.max(1, prev.day - 1);
-      } else if (field === 'month') {
-        newDate.month = increment ? Math.min(12, prev.month + 1) : Math.max(1, prev.month - 1);
-      } else if (field === 'year') {
-        newDate.year = increment ? prev.year + 1 : Math.max(2020, prev.year - 1);
-      }
-      return newDate;
-    });
+    const newDate = { ...selectedDate };
+    if (field === 'day') {
+      newDate.day = increment ? Math.min(31, selectedDate.day + 1) : Math.max(1, selectedDate.day - 1);
+    } else if (field === 'month') {
+      newDate.month = increment ? Math.min(12, selectedDate.month + 1) : Math.max(1, selectedDate.month - 1);
+    } else if (field === 'year') {
+      newDate.year = increment ? selectedDate.year + 1 : Math.max(2020, selectedDate.year - 1);
+    }
+    setSelectedDate(newDate);
   };
 
   const groupedGames = games.reduce((acc, game) => {

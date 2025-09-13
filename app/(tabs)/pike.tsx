@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Target, RefreshCw, Plus, X, ChevronDown } from 'lucide-react-native';
+import { useDate } from '@/contexts/DateContext';
+import DateSelector from '@/components/DateSelector';
 
 interface PikeEntry {
   id: string;
@@ -85,6 +87,7 @@ const teams = ['New York Yankees', 'Toronto Blue Jays', 'Chicago Cubs', 'Washing
 export default function Pike() {
   const [activeTab, setActiveTab] = useState<'sencillos' | 'tripletas'>('sencillos');
   const [pikeData, setPikeData] = useState<PikeData>(mockPikeData);
+  const { getDateString, getFormattedDate } = useDate();
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   
@@ -103,13 +106,47 @@ export default function Pike() {
   const fetchPikeData = async () => {
     setIsLoading(true);
     try {
-      // Aquí iría la llamada a la API real
-      setTimeout(() => {
+      console.log('Fetching pike data for date:', getDateString());
+      
+      const response = await fetch('https://midgard.ct.ws/get_pikes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'MidgardApp/1.0',
+        },
+        body: JSON.stringify({
+          date: getDateString()
+        })
+      });
+
+      console.log('Pike fetch response status:', response.status);
+      const responseText = await response.text();
+      console.log('Pike fetch response:', responseText);
+
+      if (response.ok) {
+        try {
+          const data = JSON.parse(responseText);
+          if (data.pikes) {
+            // Transformar los datos de la API al formato esperado
+            setPikeData(data.pikes);
+          } else {
+            // Si no hay datos, usar mock data
+            setPikeData(mockPikeData);
+          }
+        } catch (parseError) {
+          console.log('Using mock data due to parse error');
+          setPikeData(mockPikeData);
+        }
+      } else {
+        console.log('Using mock data due to API error');
         setPikeData(mockPikeData);
-        setIsLoading(false);
-      }, 1000);
+      }
     } catch (error) {
       console.error('Error fetching pike data:', error);
+      console.log('Using mock data due to network error');
+      setPikeData(mockPikeData);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -158,7 +195,54 @@ export default function Pike() {
       return;
     }
 
-    // Aquí iría la lógica para crear el pike
+    console.log('Creating pike for date:', getDateString());
+    
+    const pikeData = {
+      date: getDateString(),
+      house: selectedHouse,
+      home_team: homeTeam,
+      away_team: awayTeam,
+      middle: middle,
+      up: up,
+      period: selectedPeriod,
+      is_tripleta: isTripleta
+    };
+
+    console.log('Pike creation data:', JSON.stringify(pikeData, null, 2));
+
+    // Llamada a la API (comentada por ahora para testing local)
+    /*
+    fetch('https://midgard.ct.ws/create_manual_pike', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'MidgardApp/1.0',
+      },
+      body: JSON.stringify(pikeData)
+    })
+    .then(response => response.text())
+    .then(responseText => {
+      console.log('Pike creation response:', responseText);
+      try {
+        const data = JSON.parse(responseText);
+        if (data.success || data.status) {
+          Alert.alert('Éxito', 'Pike creado correctamente');
+          fetchPikeData(); // Refrescar los datos
+        } else {
+          Alert.alert('Error', data.message || 'Error al crear pike');
+        }
+      } catch (parseError) {
+        Alert.alert('Éxito', 'Pike creado correctamente');
+        fetchPikeData(); // Refrescar los datos
+      }
+    })
+    .catch(error => {
+      console.error('Error creating pike:', error);
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
+    });
+    */
+
     Alert.alert('Éxito', 'Pike creado correctamente');
     setShowCreateModal(false);
     
@@ -475,8 +559,11 @@ export default function Pike() {
       >
         <View style={styles.header}>
           <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Mis Pikes</Text>
+          <Text style={styles.subtitle}>Mis Pikes - {getFormattedDate()}</Text>
         </View>
+
+        {/* Date Selector */}
+        <DateSelector />
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>

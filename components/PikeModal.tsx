@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { X, RefreshCw } from 'lucide-react-native';
+import { useDate } from '@/contexts/DateContext';
 
 interface Game {
   id: string;
@@ -43,6 +44,7 @@ interface PikeModalProps {
 
 export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
   const [activeTab, setActiveTab] = useState<'sencillos' | 'tripletas'>('sencillos');
+  const { getDateString } = useDate();
   
   // Estados para intercambio individual por período
   const [fullGameSwapped, setFullGameSwapped] = useState(false);
@@ -152,10 +154,18 @@ export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
 
   const handleSave = async () => {
     try {
+      console.log('Saving pike for date:', getDateString());
+      
       const pikeData = {
         match_id: game.matchId,
+        date: getDateString(),
         type: activeTab,
-        periods: []
+        home_team: game.homeTeam,
+        away_team: game.awayTeam,
+        league: game.league,
+        periods: [],
+        line_values: {},
+        total_values: {}
       };
 
       // Agregar datos de cada período disponible
@@ -167,34 +177,61 @@ export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
         const totalValue = getTotalValue(period);
         
         if (lineValue || totalValue) {
+          // Agregar a periods array
           pikeData.periods.push({
-            period: period,
+            period: period === 'fullGame' ? 'G' : period === 'halfTime' ? 'MT' : '1/4',
             home_team_id: teams.home.id,
             away_team_id: teams.away.id,
-            line: lineValue,
-            total: totalValue,
+            home_team_name: teams.home.name,
+            away_team_name: teams.away.name,
           });
+          
+          // Agregar valores por separado
+          if (lineValue) {
+            pikeData.line_values[period] = lineValue;
+          }
+          if (totalValue) {
+            pikeData.total_values[period] = totalValue;
+          }
         }
       });
 
+      console.log('Pike data to send:', JSON.stringify(pikeData, null, 2));
+
       // Enviar a la API
-      const response = await fetch('https://midgard.ct.ws/public/api/create_pike', {
+      const response = await fetch('https://midgard.ct.ws/create_pike', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'MidgardApp/1.0',
         },
         body: JSON.stringify(pikeData)
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
       if (response.ok) {
-        Alert.alert('Éxito', 'Pike guardado correctamente');
+        try {
+          const responseData = JSON.parse(responseText);
+          if (responseData.success || responseData.status) {
+            Alert.alert('Éxito', 'Pike guardado correctamente');
+          } else {
+            Alert.alert('Error', responseData.message || 'Error al guardar el pike');
+          }
+        } catch (parseError) {
+          // Si no es JSON válido, pero el status es OK, asumimos éxito
+          Alert.alert('Éxito', 'Pike guardado correctamente');
+        }
         onClose();
       } else {
-        Alert.alert('Error', 'No se pudo guardar el pike');
+        Alert.alert('Error', `Error ${response.status}: No se pudo guardar el pike`);
       }
     } catch (error) {
       console.error('Error saving pike:', error);
-      Alert.alert('Error', 'Error de conexión');
+      Alert.alert('Error', `Error de conexión: ${error.message}`);
     }
   };
 
