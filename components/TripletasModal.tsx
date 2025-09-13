@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { X, Check, CircleAlert as AlertCircle } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Tripleta {
   id: string;
@@ -36,6 +37,8 @@ interface TripletasModalProps {
 }
 
 export default function TripletasModal({ visible, onClose, player }: TripletasModalProps) {
+  const { colors } = useTheme();
+  
   if (!player) return null;
 
   const getResultadoIcon = (tipo: 'G' | 'P' | 'X', resultado?: 'G' | 'P' | 'X') => {
@@ -73,11 +76,11 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Tripletas de {player.nombre}</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.text }]}>Tripletas de {player.nombre}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="#6B7280" />
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -87,10 +90,10 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
               const tripletaResult = getTripletaResult(tripleta);
               
               return (
-                <View key={tripleta.id} style={styles.tripletaContainer}>
-                  <View style={styles.tripletaHeader}>
-                    <Text style={styles.tripletaTitle}>Tripleta {tripletaIndex + 1}</Text>
-                    <View style={styles.tripletaMonto}>
+                <View key={tripleta.id} style={[styles.tripletaContainer, { backgroundColor: colors.surface }]}>
+                  <View style={[styles.tripletaHeader, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.tripletaTitle, { color: colors.text }]}>Tripleta {tripletaIndex + 1}</Text>
+                    <View style={[styles.tripletaMonto, { backgroundColor: colors.primary }]}>
                       <Text style={styles.montoText}>{tripleta.monto}</Text>
                     </View>
                   </View>
@@ -101,6 +104,7 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
                         key={equipoIndex} 
                         style={[
                           styles.equipoRow,
+                          { borderColor: colors.border },
                           getResultadoStyle(equipo.tipo, equipo.resultado)
                         ]}
                       >
@@ -109,19 +113,19 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
                         </View>
                         
                         <View style={styles.equipoInfo}>
-                          <Text style={styles.equipoNombre}>{equipo.nombre}</Text>
-                          <Text style={styles.equipoTipo}>({equipo.tipo})</Text>
+                          <Text style={[styles.equipoNombre, { color: colors.text }]}>{equipo.nombre}</Text>
+                          <Text style={[styles.equipoTipo, { color: colors.textSecondary }]}>{equipo.tipo})</Text>
                         </View>
 
                         {equipo.resultado && (
-                          <View style={styles.resultadoContainer}>
-                            <Text style={styles.resultadoText}>{equipo.resultado}</Text>
+                          <View style={[styles.resultadoContainer, { backgroundColor: colors.border }]}>
+                            <Text style={[styles.resultadoText, { color: colors.text }]}>{equipo.resultado}</Text>
                           </View>
                         )}
 
                         {equipoIndex === 0 && (
                           <View style={styles.montoContainer}>
-                            <Text style={styles.montoValue}>{tripleta.monto}</Text>
+                            <Text style={[styles.montoValue, { color: colors.text }]}>{tripleta.monto}</Text>
                           </View>
                         )}
                       </View>
@@ -146,16 +150,16 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
             })
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No hay tripletas registradas</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No hay tripletas registradas</Text>
             </View>
           )}
         </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+        <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.textSecondary }]} onPress={onClose}>
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.okButton} onPress={onClose}>
+          <TouchableOpacity style={[styles.okButton, { backgroundColor: colors.success }]} onPress={onClose}>
             <Text style={styles.okButtonText}>OK</Text>
           </TouchableOpacity>
         </View>
@@ -167,7 +171,6 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -175,13 +178,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   closeButton: {
     padding: 4,
@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   tripletaContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -211,15 +210,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   tripletaTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   tripletaMonto: {
-    backgroundColor: '#4F46E5',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
@@ -238,7 +234,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   equipoIcon: {
     marginRight: 12,
@@ -252,15 +247,12 @@ const styles = StyleSheet.create({
   equipoNombre: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
   },
   equipoTipo: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6B7280',
   },
   resultadoContainer: {
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -269,7 +261,6 @@ const styles = StyleSheet.create({
   resultadoText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#1F2937',
   },
   montoContainer: {
     minWidth: 60,
@@ -278,7 +269,6 @@ const styles = StyleSheet.create({
   montoValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   tripletaResult: {
     marginTop: 12,
@@ -311,7 +301,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
   },
   footer: {
@@ -319,14 +308,11 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#6B7280',
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -338,7 +324,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#10B981',
     alignItems: 'center',
   },
   okButtonText: {

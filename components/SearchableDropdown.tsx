@@ -78,6 +78,7 @@ export default function SearchableDropdown({
                   value={searchText}
                   onChangeText={setSearchText}
                   placeholder="Buscar..."
+                  placeholderTextColor={colors.textSecondary}
                   autoFocus
                 />
               </View>

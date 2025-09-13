@@ -509,6 +509,7 @@ export default function Jugadas() {
                 value={nuevoMonto}
                 onChangeText={setNuevoMonto}
                 placeholder="0"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="numeric"
               />
             </View>
@@ -581,6 +582,7 @@ export default function Jugadas() {
             value={whatsappJugadasMessage}
             onChangeText={setWhatsappJugadasMessage}
             placeholder="Pega los mensajes aquí..."
+            placeholderTextColor={colors.textSecondary}
             multiline
             numberOfLines={4}
           />
@@ -611,6 +613,7 @@ export default function Jugadas() {
             value={whatsappTripletasMessage}
             onChangeText={setWhatsappTripletasMessage}
             placeholder="Pega los mensajes aquí..."
+            placeholderTextColor={colors.textSecondary}
             multiline
             numberOfLines={4}
           />
@@ -644,6 +647,7 @@ export default function Jugadas() {
                 value={tripletaMonto}
                 onChangeText={setTripletaMonto}
                 placeholder="0"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="numeric"
               />
             </View>

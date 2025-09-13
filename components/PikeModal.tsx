@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { X, RefreshCw } from 'lucide-react-native';
 import { useDate } from '@/contexts/DateContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Game {
   id: string;
@@ -45,6 +46,7 @@ interface PikeModalProps {
 export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
   const [activeTab, setActiveTab] = useState<'sencillos' | 'tripletas'>('sencillos');
   const { getDateString } = useDate();
+  const { colors } = useTheme();
   
   // Estados para intercambio individual por período
   const [fullGameSwapped, setFullGameSwapped] = useState(false);
@@ -374,6 +376,7 @@ export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
                         value={getLineValue(period)}
                         onChangeText={(value) => setLineValue(period, value)}
                         placeholder="0.0"
+                        placeholderTextColor={colors.textSecondary}
                         keyboardType="numeric"
                       />
                     </View>
@@ -384,6 +387,7 @@ export default function PikeModal({ visible, onClose, game }: PikeModalProps) {
                         value={getTotalValue(period)}
                         onChangeText={(value) => setTotalValue(period, value)}
                         placeholder="0.0"
+                        placeholderTextColor={colors.textSecondary}
                         keyboardType="numeric"
                       />
                     </View>

@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { X } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Jugada {
   id: string;
@@ -34,6 +35,8 @@ interface JugadasModalProps {
 }
 
 export default function JugadasModal({ visible, onClose, player }: JugadasModalProps) {
+  const { colors } = useTheme();
+  
   if (!player) return null;
 
   const getResultadoStyle = (resultado?: string) => {
@@ -52,24 +55,24 @@ export default function JugadasModal({ visible, onClose, player }: JugadasModalP
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Jugadas de {player.nombre}</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.text }]}>Jugadas de {player.nombre}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="#6B7280" />
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content}>
           {player.jugadas.length > 0 ? (
             player.jugadas.map((jugada, index) => (
-              <View key={jugada.id} style={styles.jugadaItem}>
+              <View key={jugada.id} style={[styles.jugadaItem, { backgroundColor: colors.surface }]}>
                 <View style={styles.jugadaNumber}>
-                  <Text style={styles.numberText}>{index + 1}.</Text>
+                  <Text style={[styles.numberText, { color: colors.primary }]}>{index + 1}.</Text>
                 </View>
                 
                 <View style={styles.jugadaContent}>
-                  <Text style={styles.jugadaText}>
+                  <Text style={[styles.jugadaText, { color: colors.text }]}>
                     - {jugada.monto} {jugada.equipo} {jugada.tipo}
                   </Text>
                   
@@ -85,16 +88,16 @@ export default function JugadasModal({ visible, onClose, player }: JugadasModalP
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No hay jugadas registradas</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No hay jugadas registradas</Text>
             </View>
           )}
         </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+        <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.textSecondary }]} onPress={onClose}>
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.okButton} onPress={onClose}>
+          <TouchableOpacity style={[styles.okButton, { backgroundColor: colors.success }]} onPress={onClose}>
             <Text style={styles.okButtonText}>OK</Text>
           </TouchableOpacity>
         </View>
@@ -106,7 +109,6 @@ export default function JugadasModal({ visible, onClose, player }: JugadasModalP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -114,13 +116,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   closeButton: {
     padding: 4,
@@ -132,7 +131,6 @@ const styles = StyleSheet.create({
   jugadaItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
@@ -151,7 +149,6 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4F46E5',
   },
   jugadaContent: {
     flex: 1,
@@ -161,7 +158,6 @@ const styles = StyleSheet.create({
   },
   jugadaText: {
     fontSize: 14,
-    color: '#1F2937',
     flex: 1,
   },
   resultadoBadge: {
@@ -182,7 +178,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
   },
   footer: {
@@ -190,14 +185,11 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#6B7280',
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -209,7 +201,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#10B981',
     alignItems: 'center',
   },
   okButtonText: {
