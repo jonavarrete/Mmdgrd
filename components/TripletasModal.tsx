@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { X, Check, CircleAlert as AlertCircle } from 'lucide-react-native';
+import { CreditCard as Edit2, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface Tripleta {
@@ -34,9 +35,11 @@ interface TripletasModalProps {
   visible: boolean;
   onClose: () => void;
   player: CuentaJugador | null;
+  onEdit?: (tripleta: Tripleta) => void;
+  onDelete?: (tripletaId: string) => void;
 }
 
-export default function TripletasModal({ visible, onClose, player }: TripletasModalProps) {
+export default function TripletasModal({ visible, onClose, player, onEdit, onDelete }: TripletasModalProps) {
   const { colors } = useTheme();
   
   if (!player) return null;
@@ -92,9 +95,30 @@ export default function TripletasModal({ visible, onClose, player }: TripletasMo
               return (
                 <View key={tripleta.id} style={[styles.tripletaContainer, { backgroundColor: colors.surface }]}>
                   <View style={[styles.tripletaHeader, { borderBottomColor: colors.border }]}>
-                    <Text style={[styles.tripletaTitle, { color: colors.text }]}>Tripleta {tripletaIndex + 1}</Text>
-                    <View style={[styles.tripletaMonto, { backgroundColor: colors.primary }]}>
-                      <Text style={styles.montoText}>{tripleta.monto}</Text>
+                    <View style={styles.tripletaTitleContainer}>
+                      <Text style={[styles.tripletaTitle, { color: colors.text }]}>Tripleta {tripletaIndex + 1}</Text>
+                      <View style={[styles.tripletaMonto, { backgroundColor: colors.primary }]}>
+                        <Text style={styles.montoText}>{tripleta.monto}</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.tripletaHeaderActions}>
+                      {onEdit && (
+                        <TouchableOpacity
+                          style={[styles.headerActionButton, { backgroundColor: colors.warning }]}
+                          onPress={() => onEdit(tripleta)}
+                        >
+                          <Edit2 size={16} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
+                      {onDelete && (
+                        <TouchableOpacity
+                          style={[styles.headerActionButton, { backgroundColor: colors.error }]}
+                          onPress={() => onDelete(tripleta.id)}
+                        >
+                          <Trash2 size={16} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
 
@@ -211,9 +235,22 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     borderBottomWidth: 1,
   },
+  tripletaTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   tripletaTitle: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  tripletaHeaderActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerActionButton: {
+    padding: 6,
+    borderRadius: 4,
   },
   tripletaMonto: {
     paddingHorizontal: 12,

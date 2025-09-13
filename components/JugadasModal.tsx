@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { X } from 'lucide-react-native';
+import { CreditCard as Edit2, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface Jugada {
@@ -32,9 +33,11 @@ interface JugadasModalProps {
   visible: boolean;
   onClose: () => void;
   player: CuentaJugador | null;
+  onEdit?: (jugada: Jugada) => void;
+  onDelete?: (jugadaId: string) => void;
 }
 
-export default function JugadasModal({ visible, onClose, player }: JugadasModalProps) {
+export default function JugadasModal({ visible, onClose, player, onEdit, onDelete }: JugadasModalProps) {
   const { colors } = useTheme();
   
   if (!player) return null;
@@ -72,17 +75,40 @@ export default function JugadasModal({ visible, onClose, player }: JugadasModalP
                 </View>
                 
                 <View style={styles.jugadaContent}>
-                  <Text style={[styles.jugadaText, { color: colors.text }]}>
-                    - {jugada.monto} {jugada.equipo} {jugada.tipo}
-                  </Text>
+                  <View style={styles.jugadaInfo}>
+                    <Text style={[styles.jugadaText, { color: colors.text }]}>
+                      - {jugada.monto} {jugada.equipo} {jugada.tipo} {jugada.periodo !== 'G' ? jugada.periodo : ''}
+                    </Text>
+                  </View>
                   
-                  {jugada.resultado && (
-                    <View style={[styles.resultadoBadge, getResultadoStyle(jugada.resultado)]}>
-                      <Text style={[styles.resultadoText, { color: getResultadoStyle(jugada.resultado).color }]}>
-                        ({jugada.resultado})
-                      </Text>
+                  <View style={styles.jugadaRight}>
+                    {jugada.resultado && (
+                      <View style={[styles.resultadoBadge, getResultadoStyle(jugada.resultado)]}>
+                        <Text style={[styles.resultadoText, { color: getResultadoStyle(jugada.resultado).color }]}>
+                          ({jugada.resultado})
+                        </Text>
+                      </View>
+                    )}
+                    
+                    <View style={styles.jugadaActions}>
+                      {onEdit && (
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: colors.warning }]}
+                          onPress={() => onEdit(jugada)}
+                        >
+                          <Edit2 size={14} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
+                      {onDelete && (
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: colors.error }]}
+                          onPress={() => onDelete(jugada.id)}
+                        >
+                          <Trash2 size={14} color="#FFFFFF" />
+                        </TouchableOpacity>
+                      )}
                     </View>
-                  )}
+                  </View>
                 </View>
               </View>
             ))
@@ -154,17 +180,30 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  jugadaInfo: {
+    flex: 1,
+  },
+  jugadaRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   jugadaText: {
     fontSize: 14,
-    flex: 1,
+  },
+  jugadaActions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  actionButton: {
+    padding: 6,
+    borderRadius: 4,
   },
   resultadoBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    marginLeft: 8,
   },
   resultadoText: {
     fontSize: 12,
