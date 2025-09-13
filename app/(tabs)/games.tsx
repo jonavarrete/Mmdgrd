@@ -6,6 +6,7 @@ import JugadasModal from '@/components/JugadasModal';
 import TripletasModal from '@/components/TripletasModal';
 import SearchableDropdown from '@/components/SearchableDropdown';
 import { useDate } from '@/contexts/DateContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import DateSelector from '@/components/DateSelector';
 
 interface Jugada {
@@ -42,6 +43,7 @@ interface CuentaJugador {
 export default function Jugadas() {
   const [cuentas, setCuentas] = useState<CuentaJugador[]>([]);
   const { getDateString, getFormattedDate } = useDate();
+  const { colors } = useTheme();
   const [showJugadasModal, setShowJugadasModal] = useState(false);
   const [showTripletasModal, setShowTripletasModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<CuentaJugador | null>(null);
@@ -462,23 +464,23 @@ export default function Jugadas() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Jugadas - {getFormattedDate()}</Text>
+          <Text style={[styles.logo, { color: colors.primary }]}>MIDGARD</Text>
+          <Text style={[styles.subtitle, { color: colors.text }]}>Jugadas - {getFormattedDate()}</Text>
         </View>
 
         {/* Date Selector */}
         <DateSelector />
 
         {/* Formulario Jugadas Sencillas */}
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Agregar Jugada</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Agregar Jugada</Text>
             <View style={styles.jugadorContainer}>
-              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <Text style={[styles.jugadorLabel, { color: colors.textSecondary }]}>Jugador:</Text>
               <View style={styles.jugadorDropdown}>
                 <SearchableDropdown
                   options={jugadores}
@@ -492,7 +494,7 @@ export default function Jugadas() {
 
           <View style={styles.formRow}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Team</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Team</Text>
               <SearchableDropdown
                 options={equipos}
                 value={nuevoEquipo}
@@ -501,9 +503,9 @@ export default function Jugadas() {
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Money</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Money</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                 value={nuevoMonto}
                 onChangeText={setNuevoMonto}
                 placeholder="0"
@@ -522,11 +524,12 @@ export default function Jugadas() {
                 >
                   <View style={[
                     styles.radioCircle,
+                    { borderColor: colors.primary },
                     nuevoTipo === tipo && styles.radioSelected
                   ]}>
-                    {nuevoTipo === tipo && <View style={styles.radioInner} />}
+                    {nuevoTipo === tipo && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
                   </View>
-                  <Text style={styles.radioLabel}>{tipo}</Text>
+                  <Text style={[styles.radioLabel, { color: colors.text }]}>{tipo}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -540,27 +543,28 @@ export default function Jugadas() {
                 >
                   <View style={[
                     styles.radioCircle,
+                    { borderColor: colors.primary },
                     nuevoPeriodo === periodo && styles.radioSelected
                   ]}>
-                    {nuevoPeriodo === periodo && <View style={styles.radioInner} />}
+                    {nuevoPeriodo === periodo && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
                   </View>
-                  <Text style={styles.radioLabel}>{periodo}</Text>
+                  <Text style={[styles.radioLabel, { color: colors.text }]}>{periodo}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <TouchableOpacity style={styles.addButton} onPress={handleAgregarJugada}>
-            <Text style={styles.addButtonText}>Agregar</Text>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={handleAgregarJugada}>
+            <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {/* WhatsApp Jugadas Sencillas */}
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Agregar Jugadas desde WhatsApp</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Agregar Jugadas desde WhatsApp</Text>
             <View style={styles.jugadorContainer}>
-              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <Text style={[styles.jugadorLabel, { color: colors.textSecondary }]}>Jugador:</Text>
               <View style={styles.jugadorDropdown}>
                 <SearchableDropdown
                   options={jugadores}
@@ -573,24 +577,24 @@ export default function Jugadas() {
           </View>
           
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
             value={whatsappJugadasMessage}
             onChangeText={setWhatsappJugadasMessage}
             placeholder="Pega los mensajes aquí..."
             multiline
             numberOfLines={4}
           />
-          <TouchableOpacity style={styles.processButton} onPress={procesarMensajeWhatsAppJugadas}>
-            <Text style={styles.processButtonText}>Agregar</Text>
+          <TouchableOpacity style={[styles.processButton, { backgroundColor: colors.success }]} onPress={procesarMensajeWhatsAppJugadas}>
+            <Text style={[styles.processButtonText, { color: '#FFFFFF' }]}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {/* WhatsApp Tripletas */}
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Agregar Tripletas desde WhatsApp</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Agregar Tripletas desde WhatsApp</Text>
             <View style={styles.jugadorContainer}>
-              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <Text style={[styles.jugadorLabel, { color: colors.textSecondary }]}>Jugador:</Text>
               <View style={styles.jugadorDropdown}>
                 <SearchableDropdown
                   options={jugadores}
@@ -603,24 +607,24 @@ export default function Jugadas() {
           </View>
           
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
             value={whatsappTripletasMessage}
             onChangeText={setWhatsappTripletasMessage}
             placeholder="Pega los mensajes aquí..."
             multiline
             numberOfLines={4}
           />
-          <TouchableOpacity style={styles.processButton} onPress={procesarMensajeWhatsAppTripletas}>
-            <Text style={styles.processButtonText}>Agregar</Text>
+          <TouchableOpacity style={[styles.processButton, { backgroundColor: colors.success }]} onPress={procesarMensajeWhatsAppTripletas}>
+            <Text style={[styles.processButtonText, { color: '#FFFFFF' }]}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {/* Formulario Tripletas */}
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { backgroundColor: colors.surface }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Agregar Jugada Tripleta</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Agregar Jugada Tripleta</Text>
             <View style={styles.jugadorContainer}>
-              <Text style={styles.jugadorLabel}>Jugador:</Text>
+              <Text style={[styles.jugadorLabel, { color: colors.textSecondary }]}>Jugador:</Text>
               <View style={styles.jugadorDropdown}>
                 <SearchableDropdown
                   options={jugadores}
@@ -634,9 +638,9 @@ export default function Jugadas() {
 
           <View style={styles.formRow}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Money</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Money</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                 value={tripletaMonto}
                 onChangeText={setTripletaMonto}
                 placeholder="0"
@@ -647,7 +651,7 @@ export default function Jugadas() {
 
           {tripletaEquipos.map((equipo, index) => (
             <View key={index} style={styles.tripletaTeamSection}>
-              <Text style={styles.teamLabel}>Team {index + 1}</Text>
+              <Text style={[styles.teamLabel, { color: colors.text }]}>Team {index + 1}</Text>
               
               <View style={styles.formRow}>
                 <View style={styles.inputGroup}>
@@ -678,11 +682,12 @@ export default function Jugadas() {
                     >
                       <View style={[
                         styles.radioCircle,
+                        { borderColor: colors.primary },
                         equipo.tipo === tipo && styles.radioSelected
                       ]}>
-                        {equipo.tipo === tipo && <View style={styles.radioInner} />}
+                        {equipo.tipo === tipo && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
                       </View>
-                      <Text style={styles.radioLabel}>{tipo}</Text>
+                      <Text style={[styles.radioLabel, { color: colors.text }]}>{tipo}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -700,11 +705,12 @@ export default function Jugadas() {
                     >
                       <View style={[
                         styles.radioCircle,
+                        { borderColor: colors.primary },
                         equipo.periodo === periodo && styles.radioSelected
                       ]}>
-                        {equipo.periodo === periodo && <View style={styles.radioInner} />}
+                        {equipo.periodo === periodo && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
                       </View>
-                      <Text style={styles.radioLabel}>{periodo}</Text>
+                      <Text style={[styles.radioLabel, { color: colors.text }]}>{periodo}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -712,23 +718,23 @@ export default function Jugadas() {
             </View>
           ))}
 
-          <TouchableOpacity style={styles.addButton} onPress={handleAgregarTripleta}>
-            <Text style={styles.addButtonText}>Agregar</Text>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={handleAgregarTripleta}>
+            <Text style={[styles.addButtonText, { color: '#FFFFFF' }]}>Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {/* Cuentas de Jugadores */}
         <View style={styles.cuentasSection}>
-          <Text style={styles.sectionTitle}>Cuentas de Jugadores</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Cuentas de Jugadores</Text>
           
           {cuentas.map((cuenta) => (
-            <View key={cuenta.id} style={styles.cuentaCard}>
+            <View key={cuenta.id} style={[styles.cuentaCard, { backgroundColor: colors.surface }]}>
               {/* Header de la cuenta */}
-              <View style={styles.cuentaHeader}>
-                <Text style={styles.cuentaNombre}>{cuenta.nombre}</Text>
+              <View style={[styles.cuentaHeader, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.cuentaNombre, { color: colors.text }]}>{cuenta.nombre}</Text>
                 <View style={styles.cuentaActions}>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: colors.background }]}
                     onPress={() => {
                       setSelectedPlayer(cuenta);
                       setShowJugadasModal(true);
@@ -737,7 +743,7 @@ export default function Jugadas() {
                     <Eye size={20} color="#4F46E5" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: colors.background }]}
                     onPress={() => {
                       setSelectedPlayer(cuenta);
                       setShowTripletasModal(true);
@@ -746,7 +752,7 @@ export default function Jugadas() {
                     <Target size={20} color="#10B981" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: colors.background }]}
                     onPress={() => eliminarCuenta(cuenta.id)}
                   >
                     <Trash2 size={20} color="#EF4444" />
@@ -759,13 +765,13 @@ export default function Jugadas() {
                 <View style={styles.jugadasSection}>
                   <View style={styles.jugadasColumns}>
                     {/* Columna Ganado (G) */}
-                    <View style={styles.jugadasColumn}>
-                      <Text style={styles.columnHeader}>G</Text>
+                    <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
+                      <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>G</Text>
                       {cuenta.jugadas
                         .filter(jugada => jugada.resultado === 'G')
                         .map((jugada, index) => (
                           <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={styles.jugadaEquipoText}>
+                            <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
                               {jugada.monto} {jugada.equipo} 
                                {jugada.periodo == 'G'? '':jugada.periodo} 
                               {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
@@ -775,13 +781,13 @@ export default function Jugadas() {
                     </View>
 
                     {/* Columna Perdido (P) */}
-                    <View style={styles.jugadasColumn}>
-                      <Text style={styles.columnHeader}>P</Text>
+                    <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
+                      <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>P</Text>
                       {cuenta.jugadas
                         .filter(jugada => jugada.resultado === 'P')
                         .map((jugada, index) => (
                           <View key={jugada.id} style={styles.jugadaItem}>
-                            <Text style={styles.jugadaEquipoText}>
+                            <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
                               {jugada.monto} {jugada.equipo} 
                                {jugada.periodo == 'G'? '': jugada.periodo} 
                               {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
@@ -797,49 +803,49 @@ export default function Jugadas() {
               {cuenta.tripletas.length > 0 && (
                 <View style={styles.tripletasSection}>
                   <View style={styles.tripletasColumns}>
-                    <View style={styles.tripletasColumn}>
+                    <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
                       <View style={styles.tripletaRow}>
-                        <Text style={styles.tripletaLabel}>C:</Text>
-                        <Text style={styles.tripletaValue}>15000</Text>
+                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>C:</Text>
+                        <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
                       </View>
                       <View style={styles.tripletaRow}>
-                        <Text style={styles.tripletaLabel}>L:</Text>
-                        <Text style={styles.tripletaValue}>13500</Text>
+                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>L:</Text>
+                        <Text style={[styles.tripletaValue, { color: colors.text }]}>13500</Text>
                       </View>
                       <View style={styles.tripletaRow}>
-                        <Text style={styles.tripletaLabel}>P:</Text>
-                        <Text style={styles.tripletaValue}>15000</Text>
+                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>P:</Text>
+                        <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
                       </View>
                       <View style={styles.tripletaRow}>
-                        <Text style={styles.tripletaLabel}>F:</Text>
-                        <Text style={styles.tripletaValue}>-1500</Text>
+                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>F:</Text>
+                        <Text style={[styles.tripletaValue, { color: colors.text }]}>-1500</Text>
                       </View>
                     </View>
 
-                    <View style={styles.tripletasColumn}>
+                    <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
                       <View style={styles.tripletaTypeColumns}>
                         <View style={styles.tripletaTypeColumn}>
-                          <Text style={styles.tripletaTypeLabel}>I</Text>
-                          <Text style={styles.tripletaTypeValue}>0</Text>
-                          <Text style={styles.tripletaTypeValue}></Text>
-                          <View style={styles.tripletaTypeSeparator} />
-                          <Text style={styles.tripletaTypeTotalValue}>0</Text>
+                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>I</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
+                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
                         </View>
                         
                         <View style={styles.tripletaTypeColumn}>
-                          <Text style={styles.tripletaTypeLabel}>II</Text>
-                          <Text style={styles.tripletaTypeValue}>5000</Text>
-                          <Text style={styles.tripletaTypeValue}>15000</Text>
-                          <View style={styles.tripletaTypeSeparator} />
-                          <Text style={styles.tripletaTypeTotalValue}>60000</Text>
+                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>II</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>5000</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>15000</Text>
+                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>60000</Text>
                         </View>
                         
                         <View style={styles.tripletaTypeColumn}>
-                          <Text style={styles.tripletaTypeLabel}>III</Text>
-                          <Text style={styles.tripletaTypeValue}>0</Text>
-                          <Text style={styles.tripletaTypeValue}></Text>
-                          <View style={styles.tripletaTypeSeparator} />
-                          <Text style={styles.tripletaTypeTotalValue}>0</Text>
+                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>III</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
+                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
+                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
                         </View>
                       </View>
                     </View>
@@ -848,29 +854,29 @@ export default function Jugadas() {
               )}
 
               {/* Cálculo Final */}
-              <View style={styles.finalCalculationSection}>
+              <View style={[styles.finalCalculationSection, { borderTopColor: colors.border }]}>
                 <View style={styles.finalCalculationColumns}>
-                  <View style={styles.finalCalculationColumn}>
+                  <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
                     <View style={styles.calculationItem}>
-                      <Text style={styles.calculationValue}>+11000 (2%)</Text>
+                      <Text style={[styles.calculationValue, { color: colors.text }]}>+11000 (2%)</Text>
                     </View>
                     <View style={styles.calculationItem}>
-                      <Text style={styles.calculationValue}>101000</Text>
+                      <Text style={[styles.calculationValue, { color: colors.text }]}>101000</Text>
                     </View>
                     <View style={styles.calculationItem}>
-                      <Text style={styles.calculationValue}>+1500 (Tripleta)</Text>
+                      <Text style={[styles.calculationValue, { color: colors.text }]}>+1500 (Tripleta)</Text>
                     </View>
-                    <View style={styles.calculationSeparator} />
+                    <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
                     <View style={[styles.calculationTotal, styles.calculationTotalWin]}>
                       <Text style={styles.calculationTotalText}>347500</Text>
                     </View>
                   </View>
 
-                  <View style={styles.finalCalculationColumn}>
+                  <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
                     <View style={styles.calculationItem}>
-                      <Text style={styles.calculationValue}>-102500</Text>
+                      <Text style={[styles.calculationValue, { color: colors.text }]}>-102500</Text>
                     </View>
-                    <View style={styles.calculationSeparator} />
+                    <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
                     <View style={[styles.calculationTotal, styles.calculationTotalLoss]}>
                       <Text style={styles.calculationTotalText}>102500</Text>
                     </View>
@@ -882,9 +888,9 @@ export default function Jugadas() {
         </View>
 
         {/* Send to Telegram Button */}
-        <TouchableOpacity style={styles.telegramButton}>
+        <TouchableOpacity style={[styles.telegramButton, { backgroundColor: '#0088CC' }]}>
           <Send size={20} color="#FFFFFF" />
-          <Text style={styles.telegramButtonText}>Enviar a Telegram</Text>
+          <Text style={[styles.telegramButtonText, { color: '#FFFFFF' }]}>Enviar a Telegram</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -907,7 +913,6 @@ export default function Jugadas() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   content: {
     flexGrow: 1,
@@ -920,16 +925,13 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4F46E5',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1F2937',
   },
   formSection: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -951,7 +953,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
     flex: 1,
   },
   jugadorContainer: {
@@ -960,7 +961,6 @@ const styles = StyleSheet.create({
   jugadorLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 4,
   },
   jugadorDropdown: {
@@ -977,26 +977,21 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 6,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
+    borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    backgroundColor: '#FFFFFF',
   },
   textArea: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
+    borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    backgroundColor: '#FFFFFF',
     height: 100,
     textAlignVertical: 'top',
     marginBottom: 16,
@@ -1020,22 +1015,18 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: '#4F46E5',
   },
   radioInner: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#4F46E5',
   },
   radioLabel: {
     fontSize: 14,
-    color: '#1F2937',
   },
   tripletaTeamSection: {
     marginBottom: 20,
@@ -1046,28 +1037,23 @@ const styles = StyleSheet.create({
   teamLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 12,
   },
   addButton: {
-    backgroundColor: '#4F46E5',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   addButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   processButton: {
-    backgroundColor: '#10B981',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   processButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1075,7 +1061,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   cuentaCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1095,12 +1080,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   cuentaNombre: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
   },
   cuentaActions: {
     flexDirection: 'row',
@@ -1109,7 +1092,6 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#F3F4F6',
   },
   jugadasSection: {
     marginBottom: 20,
@@ -1120,25 +1102,20 @@ const styles = StyleSheet.create({
   },
   jugadasColumn: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   columnHeader: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1F2937',
     textAlign: 'center',
     paddingVertical: 8,
-    backgroundColor: '#E5E7EB',
   },
   jugadaItem: {
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   jugadaEquipoText: {
     fontSize: 12,
-    color: '#1F2937',
     fontWeight: '500',
   },
   tripletasSection: {
@@ -1150,7 +1127,6 @@ const styles = StyleSheet.create({
   },
   tripletasColumn: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
     padding: 8,
   },
   tripletaRow: {
@@ -1162,11 +1138,9 @@ const styles = StyleSheet.create({
   tripletaLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   tripletaValue: {
     fontSize: 14,
-    color: '#1F2937',
   },
   tripletaTypeColumns: {
     flexDirection: 'row',
@@ -1180,27 +1154,23 @@ const styles = StyleSheet.create({
   tripletaTypeLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1F2937',
     textAlign: 'center',
     marginBottom: 8,
   },
   tripletaTypeValue: {
     fontSize: 12,
-    color: '#1F2937',
     textAlign: 'center',
     paddingVertical: 2,
     minHeight: 16,
   },
   tripletaTypeSeparator: {
     height: 1,
-    backgroundColor: '#1F2937',
     width: '80%',
     marginVertical: 4,
   },
   tripletaTypeTotalValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1F2937',
     textAlign: 'center',
     marginTop: 4,
   },
@@ -1208,7 +1178,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   finalCalculationColumns: {
     flexDirection: 'row',
@@ -1216,7 +1185,6 @@ const styles = StyleSheet.create({
   },
   finalCalculationColumn: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
     padding: 8,
   },
   calculationItem: {
@@ -1224,11 +1192,9 @@ const styles = StyleSheet.create({
   },
   calculationValue: {
     fontSize: 12,
-    color: '#1F2937',
   },
   calculationSeparator: {
     height: 1,
-    backgroundColor: '#1F2937',
     marginVertical: 8,
   },
   calculationTotal: {
@@ -1249,7 +1215,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   telegramButton: {
-    backgroundColor: '#0088CC',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1259,7 +1224,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   telegramButtonText: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },

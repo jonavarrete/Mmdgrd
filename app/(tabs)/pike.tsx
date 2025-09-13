@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, M
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Target, RefreshCw, Plus, X, ChevronDown } from 'lucide-react-native';
 import { useDate } from '@/contexts/DateContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import DateSelector from '@/components/DateSelector';
 
 interface PikeEntry {
@@ -88,6 +89,7 @@ export default function Pike() {
   const [activeTab, setActiveTab] = useState<'sencillos' | 'tripletas'>('sencillos');
   const [pikeData, setPikeData] = useState<PikeData>(mockPikeData);
   const { getDateString, getFormattedDate } = useDate();
+  const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   
@@ -257,7 +259,7 @@ export default function Pike() {
   };
 
   const renderPikeCard = (entry: PikeEntry) => (
-    <View key={entry.id} style={styles.pikeCard}>
+    <View key={entry.id} style={[styles.pikeCard, { backgroundColor: colors.surface }]}>
       {/* Top Row */}
       <View style={styles.pikeTopRow}>
         <View style={styles.teamResult}>
@@ -322,25 +324,25 @@ export default function Pike() {
     if (sportName === 'basket' && typeof entries === 'object') {
       return (
         <View style={styles.sportSection}>
-          <Text style={styles.sportTitle}>Basket</Text>
+          <Text style={[styles.sportTitle, { color: colors.text }]}>Basket</Text>
           
           {entries.juego.length > 0 && (
             <View style={styles.subSection}>
-              <Text style={styles.subSectionTitle}>Juego</Text>
+              <Text style={[styles.subSectionTitle, { color: colors.primary }]}>Juego</Text>
               {entries.juego.map(renderPikeCard)}
             </View>
           )}
           
           {entries.mt.length > 0 && (
             <View style={styles.subSection}>
-              <Text style={styles.subSectionTitle}>MT</Text>
+              <Text style={[styles.subSectionTitle, { color: colors.primary }]}>MT</Text>
               {entries.mt.map(renderPikeCard)}
             </View>
           )}
           
           {entries.cuarto.length > 0 && (
             <View style={styles.subSection}>
-              <Text style={styles.subSectionTitle}>1/4</Text>
+              <Text style={[styles.subSectionTitle, { color: colors.primary }]}>1/4</Text>
               {entries.cuarto.map(renderPikeCard)}
             </View>
           )}
@@ -351,7 +353,7 @@ export default function Pike() {
     if (Array.isArray(entries) && entries.length > 0) {
       return (
         <View style={styles.sportSection}>
-          <Text style={styles.sportTitle}>
+          <Text style={[styles.sportTitle, { color: colors.text }]}>
             {sportName === 'pelota' ? 'Pelota' : sportName === 'futbol' ? 'Fútbol' : sportName}
           </Text>
           {entries.map(renderPikeCard)}
@@ -550,7 +552,7 @@ export default function Pike() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         contentContainerStyle={styles.content}
         refreshControl={
@@ -558,8 +560,8 @@ export default function Pike() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Mis Pikes - {getFormattedDate()}</Text>
+          <Text style={[styles.logo, { color: colors.primary }]}>MIDGARD</Text>
+          <Text style={[styles.subtitle, { color: colors.text }]}>Mis Pikes - {getFormattedDate()}</Text>
         </View>
 
         {/* Date Selector */}
@@ -568,7 +570,7 @@ export default function Pike() {
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity 
-            style={styles.refreshButton} 
+            style={[styles.refreshButton, { backgroundColor: colors.primary }]} 
             onPress={fetchPikeData}
             disabled={isLoading}
           >
@@ -579,7 +581,7 @@ export default function Pike() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.addButton} 
+            style={[styles.addButton, { backgroundColor: colors.success }]} 
             onPress={() => setShowCreateModal(true)}
           >
             <Plus size={20} color="#FFFFFF" />
@@ -588,28 +590,30 @@ export default function Pike() {
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabContainer}>
+        <View style={[styles.tabContainer, { backgroundColor: colors.border }]}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'sencillos' && styles.activeTab]}
+            style={[styles.tab, activeTab === 'sencillos' && { ...styles.activeTab, backgroundColor: colors.surface }]}
             onPress={() => setActiveTab('sencillos')}
           >
             <Text
               style={[
-                styles.tabText,
-                activeTab === 'sencillos' && styles.activeTabText,
+                styles.tabText, 
+                { color: activeTab === 'sencillos' ? colors.text : colors.textSecondary },
+                activeTab === 'sencillos' && { fontWeight: '600' },
               ]}
             >
               Pike Sencillos del Día
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'tripletas' && styles.activeTab]}
+            style={[styles.tab, activeTab === 'tripletas' && { ...styles.activeTab, backgroundColor: colors.surface }]}
             onPress={() => setActiveTab('tripletas')}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === 'tripletas' && styles.activeTabText,
+                { color: activeTab === 'tripletas' ? colors.text : colors.textSecondary },
+                activeTab === 'tripletas' && { fontWeight: '600' },
               ]}
             >
               Pike Tripletas del Día
@@ -625,26 +629,26 @@ export default function Pike() {
         </View>
 
         {/* Legend */}
-        <View style={styles.legend}>
-          <Text style={styles.legendTitle}>Leyenda:</Text>
+        <View style={[styles.legend, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.legendTitle, { color: colors.text }]}>Leyenda:</Text>
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, styles.winResult]} />
-              <Text style={styles.legendText}>G/Gm - Gana/Gana Mitad</Text>
+              <Text style={[styles.legendText, { color: colors.textSecondary }]}>G/Gm - Gana/Gana Mitad</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, styles.loseResult]} />
-              <Text style={styles.legendText}>P/Pm - Pierde/Pierde Mitad</Text>
+              <Text style={[styles.legendText, { color: colors.textSecondary }]}>P/Pm - Pierde/Pierde Mitad</Text>
             </View>
           </View>
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, styles.tieResult]} />
-              <Text style={styles.legendText}>X - Empate</Text>
+              <Text style={[styles.legendText, { color: colors.textSecondary }]}>X - Empate</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendColor, styles.suspendedResult]} />
-              <Text style={styles.legendText}>S - Suspendido/Cancelado</Text>
+              <Text style={[styles.legendText, { color: colors.textSecondary }]}>S - Suspendido/Cancelado</Text>
             </View>
           </View>
         </View>
@@ -658,7 +662,6 @@ export default function Pike() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   content: {
     flexGrow: 1,
@@ -671,13 +674,11 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4F46E5',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1F2937',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -686,7 +687,6 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     flex: 1,
-    backgroundColor: '#4F46E5',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -702,7 +702,6 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flex: 1,
-    backgroundColor: '#10B981',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -718,7 +717,6 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
     borderRadius: 8,
     padding: 4,
     marginBottom: 20,
@@ -731,7 +729,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -744,12 +741,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
     textAlign: 'center',
-  },
-  activeTabText: {
-    color: '#1F2937',
-    fontWeight: '600',
   },
   pikeContent: {
     marginBottom: 20,
@@ -760,7 +752,6 @@ const styles = StyleSheet.create({
   sportTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 12,
     paddingLeft: 4,
   },
@@ -770,12 +761,10 @@ const styles = StyleSheet.create({
   subSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4F46E5',
     marginBottom: 8,
     paddingLeft: 8,
   },
   pikeCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -878,7 +867,6 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   legend: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -893,7 +881,6 @@ const styles = StyleSheet.create({
   legendTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 12,
   },
   legendRow: {
@@ -914,7 +901,6 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#6B7280',
     flex: 1,
   },
   // Modal styles

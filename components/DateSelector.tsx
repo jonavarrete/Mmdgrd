@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
 import { useDate } from '@/contexts/DateContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function DateSelector() {
   const { selectedDate, setSelectedDate } = useDate();
+  const { colors } = useTheme();
 
   const updateDate = (field: 'day' | 'month' | 'year', increment: boolean) => {
     const newDate = { ...selectedDate };
@@ -20,31 +22,31 @@ export default function DateSelector() {
 
   return (
     <View style={styles.dateContainer}>
-      <View style={styles.dateSelector}>
+      <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TouchableOpacity onPress={() => updateDate('day', false)}>
-          <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+          <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
         </TouchableOpacity>
-        <Text style={styles.dateText}>{selectedDate.day.toString().padStart(2, '0')}</Text>
+        <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.day.toString().padStart(2, '0')}</Text>
         <TouchableOpacity onPress={() => updateDate('day', true)}>
-          <ChevronDown size={16} color="#6B7280" />
+          <ChevronDown size={16} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
-      <View style={styles.dateSelector}>
+      <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TouchableOpacity onPress={() => updateDate('month', false)}>
-          <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+          <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
         </TouchableOpacity>
-        <Text style={styles.dateText}>{selectedDate.month.toString().padStart(2, '0')}</Text>
+        <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.month.toString().padStart(2, '0')}</Text>
         <TouchableOpacity onPress={() => updateDate('month', true)}>
-          <ChevronDown size={16} color="#6B7280" />
+          <ChevronDown size={16} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
-      <View style={styles.dateSelector}>
+      <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TouchableOpacity onPress={() => updateDate('year', false)}>
-          <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+          <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
         </TouchableOpacity>
-        <Text style={styles.dateText}>{selectedDate.year}</Text>
+        <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.year}</Text>
         <TouchableOpacity onPress={() => updateDate('year', true)}>
-          <ChevronDown size={16} color="#6B7280" />
+          <ChevronDown size={16} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -59,12 +61,10 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   dateSelector: {
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     minWidth: 60,
     alignItems: 'center',
     gap: 4,
@@ -72,6 +72,5 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1F2937',
   },
 });

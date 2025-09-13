@@ -9,6 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { ChevronDown, Search } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SearchableDropdownProps {
   options: string[];
@@ -25,6 +26,7 @@ export default function SearchableDropdown({
   placeholder,
   searchable = true,
 }: SearchableDropdownProps) {
+  const { colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
 
@@ -43,13 +45,17 @@ export default function SearchableDropdown({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.dropdown}
+        style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => setIsOpen(true)}
       >
-        <Text style={[styles.dropdownText, !value && styles.placeholder]}>
+        <Text style={[
+          styles.dropdownText, 
+          { color: value ? colors.text : colors.textSecondary },
+          !value && styles.placeholder
+        ]}>
           {value || placeholder}
         </Text>
-        <ChevronDown size={20} color="#6B7280" />
+        <ChevronDown size={20} color={colors.textSecondary} />
       </TouchableOpacity>
 
       <Modal
@@ -63,12 +69,12 @@ export default function SearchableDropdown({
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             {searchable && (
-              <View style={styles.searchContainer}>
-                <Search size={16} color="#6B7280" />
+              <View style={[styles.searchContainer, { borderBottomColor: colors.border }]}>
+                <Search size={16} color={colors.textSecondary} />
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { color: colors.text }]}
                   value={searchText}
                   onChangeText={setSearchText}
                   placeholder="Buscar..."
@@ -83,13 +89,15 @@ export default function SearchableDropdown({
                   key={index}
                   style={[
                     styles.option,
-                    option === value && styles.selectedOption
+                    { borderBottomColor: colors.border },
+                    option === value && { backgroundColor: colors.primary + '20' }
                   ]}
                   onPress={() => handleSelect(option)}
                 >
                   <Text style={[
                     styles.optionText,
-                    option === value && styles.selectedOptionText
+                    { color: option === value ? colors.primary : colors.text },
+                    option === value && { fontWeight: '600' }
                   ]}>
                     {option}
                   </Text>
@@ -97,7 +105,7 @@ export default function SearchableDropdown({
               ))}
               {filteredOptions.length === 0 && (
                 <View style={styles.noResults}>
-                  <Text style={styles.noResultsText}>No se encontraron resultados</Text>
+                  <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>No se encontraron resultados</Text>
                 </View>
               )}
             </ScrollView>
@@ -116,9 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -126,11 +132,9 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 14,
-    color: '#1F2937',
     flex: 1,
   },
   placeholder: {
-    color: '#9CA3AF',
   },
   overlay: {
     flex: 1,
@@ -140,7 +144,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     width: '100%',
     maxWidth: 400,
@@ -160,13 +163,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#1F2937',
   },
   optionsList: {
     maxHeight: 300,
@@ -175,18 +176,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  selectedOption: {
-    backgroundColor: '#EEF2FF',
   },
   optionText: {
     fontSize: 14,
-    color: '#1F2937',
-  },
-  selectedOptionText: {
-    color: '#4F46E5',
-    fontWeight: '600',
   },
   noResults: {
     padding: 20,
@@ -194,6 +186,5 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 14,
-    color: '#6B7280',
   },
 });

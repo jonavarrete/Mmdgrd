@@ -4,11 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
 import { useUser } from '@/contexts/UserContext';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Login() {
   const { setUser } = useUser();
-  const { colors } = useTheme();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -80,7 +78,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Logo and Title */}
         <View style={styles.header}>
@@ -97,7 +95,7 @@ export default function Login() {
             <View style={styles.inputWrapper}>
               <User size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { color: colors.text }]}
+                style={styles.input}
                 placeholder="Usuario"
                 placeholderTextColor="#9CA3AF"
                 value={username}
@@ -112,7 +110,7 @@ export default function Login() {
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { color: colors.text }]}
+                style={styles.input}
                 placeholder="Contraseña"
                 placeholderTextColor="#9CA3AF"
                 value={password}
@@ -158,6 +156,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#4F46E5',
   },
   content: {
     flex: 1,
@@ -215,6 +214,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    color: '#1F2937',
     color: '#1F2937',
   },
   eyeIcon: {
