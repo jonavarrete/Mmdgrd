@@ -42,8 +42,55 @@ interface CuentaJugador {
   balance: number;
 }
 
+interface DetallesGenerales {
+  jugado: {
+    totalJugado: number;
+    totalGanado: number;
+    totalPerdido: number;
+    totalPorciento: number;
+    totalHouse: number;
+  };
+  tripletas: {
+    crudo: number;
+    limpio: number;
+    premio: number;
+    total: number;
+    totalPartes: number;
+  };
+  cuentaDiaria: {
+    fondo: number;
+    ganePorCuentaDiaria: number;
+    tripletas: number;
+    cuentaFinal: number;
+  };
+}
+
+const mockDetallesGenerales: DetallesGenerales = {
+  jugado: {
+    totalJugado: 2130300,
+    totalGanado: 1094900,
+    totalPerdido: 816570,
+    totalPorciento: 37525,
+    totalHouse: 251445,
+  },
+  tripletas: {
+    crudo: 46600,
+    limpio: 41940,
+    premio: 18300,
+    total: 23640,
+    totalPartes: 11820,
+  },
+  cuentaDiaria: {
+    fondo: 34885,
+    ganePorCuentaDiaria: 750,
+    tripletas: 11820,
+    cuentaFinal: 47455,
+  },
+};
+
 export default function Jugadas() {
   const [cuentas, setCuentas] = useState<CuentaJugador[]>([]);
+  const [detallesGenerales, setDetallesGenerales] = useState<DetallesGenerales>(mockDetallesGenerales);
   const { getDateString, getFormattedDate } = useDate();
   const { colors } = useTheme();
   const [showJugadasModal, setShowJugadasModal] = useState(false);
@@ -63,6 +110,19 @@ export default function Jugadas() {
   const [nuevoPeriodo, setNuevoPeriodo] = useState<'G' | 'MT' | '1/4'>('G');
   const [nuevoMonto, setNuevoMonto] = useState('');
   const [nuevoJugador, setNuevoJugador] = useState('');
+
+  const formatNumber = (num: number) => {
+    return num.toLocaleString();
+  };
+
+  const getValueStyle = (value: number) => {
+    if (value > 0) {
+      return { color: '#10B981' }; // Verde
+    } else if (value < 0) {
+      return { color: '#EF4444' }; // Rojo
+    }
+    return { color: colors.text };
+  };
   
   // Form states para tripletas
   const [tripletaEquipos, setTripletaEquipos] = useState<Array<{
@@ -1042,6 +1102,88 @@ export default function Jugadas() {
           ))}
         </View>
 
+        {/* Detalles Generales */}
+        <View style={styles.detallesGeneralesContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Detalles Generales</Text>
+          
+          {/* Jugado Card */}
+          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Jugado</Text>
+            <View style={styles.cardContent}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total jugado:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalJugado)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total ganado:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalGanado)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total perdido:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalPerdido)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total porciento (2% + 5%):</Text>
+                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalPorciento)]}>{formatNumber(detallesGenerales.jugado.totalPorciento)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total House:</Text>
+                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalHouse)]}>{formatNumber(detallesGenerales.jugado.totalHouse)}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Tripletas Card */}
+          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Tripletas</Text>
+            <View style={styles.cardContent}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Crudo:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.crudo)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Limpio:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.limpio)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Premio:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.premio)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.total)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total partes:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.totalPartes)}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Cuenta Diaria Card */}
+          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Cuenta diaria</Text>
+            <View style={styles.cardContent}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Fondo:</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.cuentaDiaria.fondo)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Gane por cuenta diaria:</Text>
+                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)]}>{detallesGenerales.cuentaDiaria.ganePorCuentaDiaria > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Tripletas:</Text>
+                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.tripletas)]}>{detallesGenerales.cuentaDiaria.tripletas > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.tripletas)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Cuenta Final:</Text>
+                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.cuentaFinal)]}>{formatNumber(detallesGenerales.cuentaDiaria.cuentaFinal)}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Send to Telegram Button */}
         <TouchableOpacity style={[styles.telegramButton, { backgroundColor: '#0088CC' }]}>
           <Send size={20} color="#FFFFFF" />
@@ -1122,6 +1264,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   sectionTitle: {
     fontSize: 18,
@@ -1130,6 +1273,8 @@ const styles = StyleSheet.create({
   },
   jugadorContainer: {
     alignItems: 'flex-end',
+  minWidth: 120,
+  maxWidth: '40%',
   },
   jugadorLabel: {
     fontSize: 14,
@@ -1137,7 +1282,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   jugadorDropdown: {
-    minWidth: 150,
+    minWidth: 120,
+    maxWidth: 150,
   },
   formRow: {
     flexDirection: 'row',
@@ -1229,6 +1375,44 @@ const styles = StyleSheet.create({
   processButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  detallesGeneralesContainer: {
+    marginBottom: 30,
+  },
+  detailCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  cardContent: {
+    gap: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 14,
+    flex: 1,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   cuentasSection: {
     marginBottom: 20,
