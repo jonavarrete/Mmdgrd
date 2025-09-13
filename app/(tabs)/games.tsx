@@ -64,8 +64,10 @@ export default function Jugadas() {
         id: '1',
         nombre: 'Piri',
         jugadas: [
-          { id: '1', equipo: 'Boston Red Sox', tipo: 'P', monto: 4000, resultado: 'P' },
-          { id: '2', equipo: 'Boston Red Sox MT', tipo: 'P', monto: 3000, resultado: 'G' }
+          { id: '1', equipo: 'Boston Red Sox', tipo: 'P', monto: 4000, resultado: 'P', section: 'G' },
+          { id: '2', equipo: 'Boston Red Sox', tipo: 'P', monto: 3000, resultado: 'G', section: 'MT' },
+          { id: '8', equipo: 'Cubs', tipo: 'P', monto: 3000, resultado: 'G', section: 'G' },
+          { id: '9', equipo: 'Brewers', tipo: 'P', monto: 3000, resultado: 'G', section: 'MT' }
         ],
         tripletas: [
           {
@@ -86,8 +88,9 @@ export default function Jugadas() {
         id: '2',
         nombre: 'Alfredo',
         jugadas: [
-          { id: '3', equipo: 'Lakers', tipo: 'G', monto: 2500, resultado: 'G' },
-          { id: '4', equipo: 'Warriors MT', tipo: 'P', monto: 1500, resultado: 'P' }
+          { id: '3', equipo: 'Lakers', tipo: 'G', monto: 2500, resultado: 'G', section: 'G' },
+          { id: '4', equipo: 'Warriors', tipo: 'P', monto: 1500, resultado: 'P', section: '1/4' },
+          { id: '6', equipo: 'Lakers', tipo: 'P', monto: 1500, resultado: 'G', section: 'MT' }
         ],
         tripletas: [
           {
@@ -451,83 +454,132 @@ export default function Jugadas() {
               </View>
 
               {/* Jugadas Sencillas */}
+              {/* Primera Sección: Jugadas Sencillas G/P */}
               {cuenta.jugadas.length > 0 && (
                 <View style={styles.jugadasSection}>
-                  <Text style={styles.subsectionTitle}>Jugadas Sencillas</Text>
-                  {cuenta.jugadas.map((jugada, index) => (
-                    <View 
-                      key={jugada.id} 
-                      style={[
-                        styles.jugadaRow,
-                        index === cuenta.jugadas.length - 1 && styles.lastRow,
-                        jugada.resultado && getResultadoStyle(jugada.resultado)
-                      ]}
-                    >
-                      <Text style={styles.jugadaEquipo}>{jugada.equipo}</Text>
-                      <Text style={styles.jugadaTipo}>{jugada.tipo}</Text>
-                      <Text style={styles.jugadaMonto}>${jugada.monto}</Text>
-                      {jugada.resultado && (
-                        <Text style={styles.jugadaResultado}>{jugada.resultado}</Text>
-                      )}
+                  <View style={styles.jugadasColumns}>
+                    {/* Columna Ganado (G) */}
+                    <View style={styles.jugadasColumn}>
+                      <Text style={styles.columnHeader}>G</Text>
+                      {cuenta.jugadas
+                        .filter(jugada => jugada.resultado === 'G')
+                        .map((jugada, index) => (
+                          <View key={jugada.id} style={styles.jugadaItem}>
+                            <Text style={styles.jugadaEquipoText}>{jugada.monto} {jugada.equipo}
+                              {jugada.tipo === 'P' ? ' ↓' : jugada.tipo === 'G' ? ' ↑' : ''}
+                              {jugada.section === 'MT' ? ' MT' : jugada.section === '1/4' ? ' 1/4' : ''}
+                            </Text>
+                          </View>
+                        ))}
                     </View>
-                  ))}
+
+                    {/* Columna Perdido (P) */}
+                    <View style={styles.jugadasColumn}>
+                      <Text style={styles.columnHeader}>P</Text>
+                      {cuenta.jugadas
+                        .filter(jugada => jugada.resultado === 'P')
+                        .map((jugada, index) => (
+                          <View key={jugada.id} style={styles.jugadaItem}>
+                            <Text style={styles.jugadaEquipoText}>{jugada.monto} {jugada.equipo}
+                              {jugada.tipo === 'P' ? ' ↓' : jugada.tipo === 'G' ? ' ↑' : ''}
+                              {jugada.section === 'MT' ? ' MT' : jugada.section === '1/4' ? ' 1/4' : ''}
+                            </Text>
+                          </View>
+                        ))}
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {/* Tripletas */}
+              {/* Segunda Sección: Tripletas (solo si tiene tripletas) */}
               {cuenta.tripletas.length > 0 && (
                 <View style={styles.tripletasSection}>
-                  <Text style={styles.subsectionTitle}>Tripletas</Text>
-                  {cuenta.tripletas.map((tripleta, index) => (
-                    <View 
-                      key={tripleta.id} 
-                      style={[
-                        styles.tripletaContainer,
-                        index === cuenta.tripletas.length - 1 && styles.lastRow
-                      ]}
-                    >
-                      {tripleta.equipos.map((equipo, equipoIndex) => (
-                        <View 
-                          key={equipoIndex} 
-                          style={[
-                            styles.tripletaRow,
-                            equipo.resultado && getResultadoStyle(equipo.resultado)
-                          ]}
-                        >
-                          <Text style={styles.jugadaEquipo}>{equipo.nombre}</Text>
-                          <Text style={styles.jugadaTipo}>{equipo.tipo}</Text>
-                          {equipoIndex === 0 && (
-                            <Text style={styles.jugadaMonto}>${tripleta.monto}</Text>
-                          )}
-                          {equipo.resultado && (
-                            <Text style={styles.jugadaResultado}>{equipo.resultado}</Text>
-                          )}
-                        </View>
-                      ))}
+                  <View style={styles.tripletasColumns}>
+                    {/* Columna Izquierda: C, L, P, F */}
+                    <View style={styles.tripletasColumn}>
+                      <View style={styles.tripletaRow}>
+                        <Text style={styles.tripletaLabel}>C:</Text>
+                        <Text style={styles.tripletaValue}>15000</Text>
+                      </View>
+                      <View style={styles.tripletaRow}>
+                        <Text style={styles.tripletaLabel}>L:</Text>
+                        <Text style={styles.tripletaValue}>13500</Text>
+                      </View>
+                      <View style={styles.tripletaRow}>
+                        <Text style={styles.tripletaLabel}>P:</Text>
+                        <Text style={styles.tripletaValue}>15000</Text>
+                      </View>
+                      <View style={styles.tripletaRow}>
+                        <Text style={styles.tripletaLabel}>F:</Text>
+                        <Text style={styles.tripletaValue}>-1500</Text>
+                      </View>
                     </View>
-                  ))}
+
+                    {/* Columna Derecha: I, II, III */}
+                    <View style={styles.tripletasColumn}>
+                      <View style={styles.tripletaTypeColumns}>
+                        {/* Columna I */}
+                        <View style={styles.tripletaTypeColumn}>
+                          <Text style={styles.tripletaTypeLabel}>I</Text>
+                          <Text style={styles.tripletaTypeValue}>0</Text>
+                          <Text style={styles.tripletaTypeValue}></Text>
+                          <View style={styles.tripletaTypeSeparator} />
+                          <Text style={styles.tripletaTypeTotalValue}>0</Text>
+                        </View>
+                        
+                        {/* Columna II */}
+                        <View style={styles.tripletaTypeColumn}>
+                          <Text style={styles.tripletaTypeLabel}>II</Text>
+                          <Text style={styles.tripletaTypeValue}>5000</Text>
+                          <Text style={styles.tripletaTypeValue}>15000</Text>
+                          <View style={styles.tripletaTypeSeparator} />
+                          <Text style={styles.tripletaTypeTotalValue}>60000</Text>
+                        </View>
+                        
+                        {/* Columna III */}
+                        <View style={styles.tripletaTypeColumn}>
+                          <Text style={styles.tripletaTypeLabel}>III</Text>
+                          <Text style={styles.tripletaTypeValue}>0</Text>
+                          <Text style={styles.tripletaTypeValue}></Text>
+                          <View style={styles.tripletaTypeSeparator} />
+                          <Text style={styles.tripletaTypeTotalValue}>0</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {/* Balance */}
-              <View style={styles.balanceSection}>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>G:</Text>
-                  <Text style={[styles.balanceValue, { color: '#10B981' }]}>
-                    {cuenta.totalGanado}
-                  </Text>
-                </View>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>L:</Text>
-                  <Text style={[styles.balanceValue, { color: '#EF4444' }]}>
-                    {cuenta.totalPerdido}
-                  </Text>
-                </View>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceLabel}>P:</Text>
-                  <Text style={[styles.balanceValue, { color: getBalanceColor(cuenta.balance) }]}>
-                    {cuenta.balance}
-                  </Text>
+              {/* Tercera Sección: Cálculo Final */}
+              <View style={styles.finalCalculationSection}>
+                <View style={styles.finalCalculationColumns}>
+                  {/* Columna Ganado */}
+                  <View style={styles.finalCalculationColumn}>
+                    <View style={styles.calculationItem}>
+                      <Text style={styles.calculationValue}>+11000 (2%)</Text>
+                    </View>
+                    <View style={styles.calculationItem}>
+                      <Text style={styles.calculationValue}>101000</Text>
+                    </View>
+                    <View style={styles.calculationItem}>
+                      <Text style={styles.calculationValue}>+1500 (Tripleta)</Text>
+                    </View>
+                    <View style={styles.calculationSeparator} />
+                    <View style={[styles.calculationTotal, styles.calculationTotalWin]}>
+                      <Text style={styles.calculationTotalText}>347500</Text>
+                    </View>
+                  </View>
+
+                  {/* Columna Perdido */}
+                  <View style={styles.finalCalculationColumn}>
+                    <View style={styles.calculationItem}>
+                      <Text style={styles.calculationValue}>-102500</Text>
+                    </View>
+                    <View style={styles.calculationSeparator} />
+                    <View style={[styles.calculationTotal, styles.calculationTotalLoss]}>
+                      <Text style={styles.calculationTotalText}>102500</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </View>
@@ -730,86 +782,173 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   jugadasSection: {
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  jugadasColumns: {
+    flexDirection: 'row',
+    gap: 1,
+  },
+  jugadasColumn: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  columnHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    paddingVertical: 8,
+    backgroundColor: '#E5E7EB',
+  },
+  jugadaItem: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  jugadaEquipoText: {
+    fontSize: 12,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  jugadaDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  arrowUp: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: 'bold',
+  },
+  arrowDown: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: 'bold',
+  },
+  periodText: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   tripletasSection: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  subsectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  jugadaRow: {
+  tripletasColumns: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginBottom: 4,
+    gap: 1,
   },
-  lastRow: {
-    borderWidth: 2,
-    borderColor: '#4F46E5',
-  },
-  tripletaContainer: {
-    marginBottom: 8,
+  tripletasColumn: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+    padding: 8,
   },
   tripletaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginBottom: 2,
+    paddingVertical: 4,
   },
-  jugadaEquipo: {
-    flex: 2,
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#1F2937',
-  },
-  jugadaTipo: {
-    flex: 0.5,
-    fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  jugadaMonto: {
-    flex: 1,
-    fontSize: 12,
+  tripletaLabel: {
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'right',
     color: '#1F2937',
   },
-  jugadaResultado: {
-    flex: 0.5,
-    fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  tripletaValue: {
+    fontSize: 14,
+    color: '#1F2937',
   },
-  balanceSection: {
+  tripletaTypeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  tripletaTypeLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  tripletaTypeColumns: {
+    flexDirection: 'row',
+    flex: 1,
+  },
+  tripletaTypeColumn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  tripletaTypeValue: {
+    fontSize: 12,
+    color: '#1F2937',
+    textAlign: 'center',
+    paddingVertical: 2,
+    minHeight: 16,
+  },
+  tripletaTypeSeparator: {
+    height: 1,
+    backgroundColor: '#1F2937',
+    width: '80%',
+    marginVertical: 4,
+  },
+  tripletaSeparator: {
+    height: 1,
+    backgroundColor: '#1F2937',
+    marginVertical: 8,
+  },
+  tripletaTypeTotalValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  finalCalculationSection: {
+    marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
-  balanceRow: {
+  finalCalculationColumns: {
+    flexDirection: 'row',
+    gap: 1,
+  },
+  finalCalculationColumn: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+    padding: 8,
+  },
+  calculationItem: {
+    paddingVertical: 4,
+  },
+  calculationValue: {
+    fontSize: 12,
+    color: '#1F2937',
+  },
+  calculationSeparator: {
+    height: 1,
+    backgroundColor: '#1F2937',
+    marginVertical: 8,
+  },
+  calculationTotal: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
     alignItems: 'center',
   },
-  balanceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 4,
+  calculationTotalWin: {
+    backgroundColor: '#10B981',
   },
-  balanceValue: {
+  calculationTotalLoss: {
+    backgroundColor: '#EF4444',
+  },
+  calculationTotalText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   telegramButton: {
     backgroundColor: '#0088CC',
