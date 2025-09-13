@@ -1,65 +1,109 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Target, RefreshCw } from 'lucide-react-native';
+import { Target, RefreshCw, Plus, X, ChevronDown } from 'lucide-react-native';
 
 interface PikeEntry {
   id: string;
-  team: string;
-  opponent: string;
-  result: 'G' | 'Gm' | 'P' | 'Pm' | 'X' | 'S'; // G=Gana, Gm=Gana Mitad, P=Pierde, Pm=Pierde Mitad, X=Empate, S=Suspendido
-  score?: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeResult: 'G' | 'Gm' | 'P' | 'Pm' | 'X' | 'S';
+  awayResult: 'G' | 'Gm' | 'P' | 'Pm' | 'X' | 'S';
+  homeScore: string;
+  awayScore: string;
+  middle: string;
+  up: string;
   league: string;
-  period: string; // G, MT, 1/4, etc.
+  period: 'G' | 'MT' | '1/4';
+  house: string;
+  isTripleta: boolean;
 }
 
 interface PikeData {
-  sencillos: PikeEntry[];
-  tripletas: PikeEntry[];
+  sencillos: {
+    pelota: PikeEntry[];
+    futbol: PikeEntry[];
+    basket: {
+      juego: PikeEntry[];
+      mt: PikeEntry[];
+      cuarto: PikeEntry[];
+    };
+  };
+  tripletas: {
+    pelota: PikeEntry[];
+    futbol: PikeEntry[];
+    basket: {
+      juego: PikeEntry[];
+      mt: PikeEntry[];
+      cuarto: PikeEntry[];
+    };
+  };
 }
 
 // Mock data para visualización
 const mockPikeData: PikeData = {
-  sencillos: [
-    { id: '1', team: 'New York Yankees', opponent: 'Toronto Blue Jays', result: 'G', score: '1', league: 'MLB', period: 'G' },
-    { id: '2', team: 'New York Yankees', opponent: 'Toronto Blue Jays', result: 'Gm', score: '5yn5', league: 'MLB', period: 'MT' },
-    { id: '3', team: 'Chicago Cubs', opponent: 'Washington Nationals', result: 'P', score: '4yn5', league: 'MLB', period: 'G' },
-    { id: '4', team: 'Chicago Cubs', opponent: 'Washington Nationals', result: 'G', score: '6', league: 'MLB', period: 'MT' },
-    { id: '5', team: 'Cartagena', opponent: 'Guardianes', result: 'P', score: '2', league: 'Fútbol', period: 'G' },
-    { id: '6', team: 'Gramma', opponent: 'Holguín', result: 'X', score: '5yn2', league: 'MLB', period: 'G' },
-    { id: '7', team: 'Industriales', opponent: 'Camagüey', result: 'G', score: '3', league: 'MLB', period: 'G' },
-    { id: '8', team: 'Sancti Spíritus', opponent: 'Villa Clara', result: 'Gm', score: 'my1', league: 'MLB', period: 'G' },
-    { id: '9', team: 'Santiago de Cuba', opponent: 'La Isla', result: 'P', score: '5', league: 'MLB', period: 'G' },
-    { id: '10', team: 'Philadelphia Phillies', opponent: 'Miami Marlins', result: 'S', score: '4yn8', league: 'MLB', period: 'MT' },
-  ],
-  tripletas: [
-    { id: '11', team: 'Industriales', opponent: 'Cienfuegos', result: 'G', score: '2', league: 'MLB', period: 'G' },
-    { id: '12', team: 'Sancti Spíritus', opponent: 'Villa Clara', result: 'Gm', score: '1yn', league: 'MLB', period: 'G' },
-    { id: '13', team: 'Camagüey', opponent: 'Guantánamo', result: 'P', score: '3', league: 'MLB', period: 'G' },
-    { id: '14', team: 'Gramma', opponent: 'Holguín', result: 'G', score: '1yn', league: 'MLB', period: 'G' },
-    { id: '15', team: 'Las Tunas', opponent: 'Pinar del Río', result: 'X', score: '1yn', league: 'MLB', period: 'G' },
-    { id: '16', team: 'New York Yankees', opponent: 'Toronto Blue Jays', result: 'P', score: '10', league: 'MLB', period: 'G' },
-    { id: '17', team: 'Chicago Cubs', opponent: 'Washington Nationals', result: 'G', score: '2', league: 'MLB', period: 'G' },
-    { id: '18', team: 'Philadelphia Phillies', opponent: 'Miami Marlins', result: 'Gm', score: '1yn', league: 'MLB', period: 'G' },
-    { id: '19', team: 'Detroit Tigers', opponent: 'Chicago White Sox', result: 'P', score: '2', league: 'MLB', period: 'G' },
-    { id: '20', team: 'Milwaukee Brewers', opponent: 'Pittsburgh Pirates', result: 'S', score: '1yn', league: 'MLB', period: 'G' },
-  ]
+  sencillos: {
+    pelota: [
+      { id: '1', homeTeam: 'New York Yankees', awayTeam: 'Toronto Blue Jays', homeResult: 'G', awayResult: 'P', homeScore: '1', awayScore: '10', middle: '2ym', up: 'pym', league: 'MLB', period: 'G', house: 'House1', isTripleta: false },
+      { id: '2', homeTeam: 'Chicago Cubs', awayTeam: 'Washington Nationals', homeResult: 'P', awayResult: 'G', homeScore: '4', awayScore: '5', middle: '1ym', up: 'my1', league: 'MLB', period: 'MT', house: 'House2', isTripleta: false },
+    ],
+    futbol: [
+      { id: '3', homeTeam: 'Cartagena', awayTeam: 'Guardianes', homeResult: 'P', awayResult: 'G', homeScore: '2', awayScore: '3', middle: 'pym', up: '3', league: 'Fútbol', period: 'G', house: 'House3', isTripleta: false },
+    ],
+    basket: {
+      juego: [
+        { id: '4', homeTeam: 'Lakers', awayTeam: 'Warriors', homeResult: 'G', awayResult: 'P', homeScore: '110', awayScore: '105', middle: '+5', up: '215', league: 'NBA', period: 'G', house: 'House4', isTripleta: false },
+      ],
+      mt: [
+        { id: '5', homeTeam: 'Lakers', awayTeam: 'Warriors', homeResult: 'Gm', awayResult: 'Pm', homeScore: '55', awayScore: '50', middle: '+2.5', up: '105', league: 'NBA', period: 'MT', house: 'House4', isTripleta: false },
+      ],
+      cuarto: [
+        { id: '6', homeTeam: 'Lakers', awayTeam: 'Warriors', homeResult: 'X', awayResult: 'X', homeScore: '25', awayScore: '25', middle: '0', up: '50', league: 'NBA', period: '1/4', house: 'House4', isTripleta: false },
+      ],
+    },
+  },
+  tripletas: {
+    pelota: [
+      { id: '7', homeTeam: 'Industriales', awayTeam: 'Cienfuegos', homeResult: 'G', awayResult: 'P', homeScore: '2', awayScore: '1', middle: '1ym', up: '3y3m', league: 'MLB', period: 'G', house: 'House5', isTripleta: true },
+    ],
+    futbol: [
+      { id: '8', homeTeam: 'Real Madrid', awayTeam: 'Barcelona', homeResult: 'X', awayResult: 'X', homeScore: '2', awayScore: '2', middle: 'p', up: '2', league: 'Fútbol', period: 'G', house: 'House6', isTripleta: true },
+    ],
+    basket: {
+      juego: [
+        { id: '9', homeTeam: 'Celtics', awayTeam: 'Heat', homeResult: 'P', awayResult: 'G', homeScore: '95', awayScore: '100', middle: '-3', up: '195', league: 'NBA', period: 'G', house: 'House7', isTripleta: true },
+      ],
+      mt: [],
+      cuarto: [],
+    },
+  },
 };
+
+const houses = ['House1', 'House2', 'House3', 'House4', 'House5'];
+const teams = ['New York Yankees', 'Toronto Blue Jays', 'Chicago Cubs', 'Washington Nationals', 'Lakers', 'Warriors', 'Celtics', 'Heat'];
 
 export default function Pike() {
   const [activeTab, setActiveTab] = useState<'sencillos' | 'tripletas'>('sencillos');
   const [pikeData, setPikeData] = useState<PikeData>(mockPikeData);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Form states
+  const [selectedHouse, setSelectedHouse] = useState('');
+  const [homeTeam, setHomeTeam] = useState('');
+  const [awayTeam, setAwayTeam] = useState('');
+  const [middle, setMiddle] = useState('');
+  const [up, setUp] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<'G' | 'MT' | '1/4'>('G');
+  const [isTripleta, setIsTripleta] = useState(false);
+  const [showHouseDropdown, setShowHouseDropdown] = useState(false);
+  const [showHomeTeamDropdown, setShowHomeTeamDropdown] = useState(false);
+  const [showAwayTeamDropdown, setShowAwayTeamDropdown] = useState(false);
 
   const fetchPikeData = async () => {
     setIsLoading(true);
     try {
       // Aquí iría la llamada a la API real
-      // const response = await fetch('https://midgard.ct.ws/public/get_pikes');
-      // const data = await response.json();
-      // setPikeData(data);
-      
-      // Por ahora usamos datos mock
       setTimeout(() => {
         setPikeData(mockPikeData);
         setIsLoading(false);
@@ -108,68 +152,318 @@ export default function Pike() {
     }
   };
 
-  const renderPikeTable = (entries: PikeEntry[]) => {
-    // Dividir las entradas en dos columnas
-    const leftColumn = entries.filter((_, index) => index % 2 === 0);
-    const rightColumn = entries.filter((_, index) => index % 2 === 1);
-    const maxRows = Math.max(leftColumn.length, rightColumn.length);
+  const handleCreatePike = () => {
+    if (!selectedHouse || !homeTeam || !awayTeam || !middle || !up) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
 
-    return (
-      <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderText}>Pike {activeTab === 'sencillos' ? 'Sencillos' : 'Tripletas'} del Día</Text>
+    // Aquí iría la lógica para crear el pike
+    Alert.alert('Éxito', 'Pike creado correctamente');
+    setShowCreateModal(false);
+    
+    // Reset form
+    setSelectedHouse('');
+    setHomeTeam('');
+    setAwayTeam('');
+    setMiddle('');
+    setUp('');
+    setSelectedPeriod('G');
+    setIsTripleta(false);
+  };
+
+  const renderPikeCard = (entry: PikeEntry) => (
+    <View key={entry.id} style={styles.pikeCard}>
+      {/* Top Row */}
+      <View style={styles.pikeTopRow}>
+        <View style={styles.teamResult}>
+          <Text style={[styles.teamName, getResultTextStyle(entry.homeResult)]}>
+            {entry.homeTeam}
+          </Text>
+          <View style={[styles.resultBadge, getResultStyle(entry.homeResult)]}>
+            <Text style={[styles.resultText, getResultTextStyle(entry.homeResult)]}>
+              {entry.homeResult}
+            </Text>
+          </View>
         </View>
         
-        <View style={styles.tableContent}>
-          <View style={styles.column}>
-            {leftColumn.map((entry, index) => (
-              <View key={entry.id} style={[styles.pikeRow, getResultStyle(entry.result)]}>
-                <View style={styles.teamInfo}>
-                  <Text style={[styles.teamName, getResultTextStyle(entry.result)]}>
-                    {entry.team} ({entry.period})
-                  </Text>
-                  <Text style={[styles.opponentName, getResultTextStyle(entry.result)]}>
-                    {entry.opponent}
-                  </Text>
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={[styles.score, getResultTextStyle(entry.result)]}>
-                    {entry.score}
-                  </Text>
-                  <Text style={[styles.result, getResultTextStyle(entry.result)]}>
-                    {entry.result}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-          
-          <View style={styles.column}>
-            {rightColumn.map((entry, index) => (
-              <View key={entry.id} style={[styles.pikeRow, getResultStyle(entry.result)]}>
-                <View style={styles.teamInfo}>
-                  <Text style={[styles.teamName, getResultTextStyle(entry.result)]}>
-                    {entry.team} ({entry.period})
-                  </Text>
-                  <Text style={[styles.opponentName, getResultTextStyle(entry.result)]}>
-                    {entry.opponent}
-                  </Text>
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={[styles.score, getResultTextStyle(entry.result)]}>
-                    {entry.score}
-                  </Text>
-                  <Text style={[styles.result, getResultTextStyle(entry.result)]}>
-                    {entry.result}
-                  </Text>
-                </View>
-              </View>
-            ))}
+        <View style={styles.middleContainer}>
+          <Text style={styles.middleText}>{entry.middle}</Text>
+        </View>
+        
+        <View style={styles.teamResult}>
+          <Text style={[styles.teamName, getResultTextStyle(entry.awayResult)]}>
+            {entry.awayTeam}
+          </Text>
+          <View style={[styles.resultBadge, getResultStyle(entry.awayResult)]}>
+            <Text style={[styles.resultText, getResultTextStyle(entry.awayResult)]}>
+              {entry.awayResult}
+            </Text>
           </View>
         </View>
       </View>
-    );
+      
+      {/* Bottom Row */}
+      <View style={styles.pikeBottomRow}>
+        <View style={styles.teamResult}>
+          <Text style={[styles.scoreText, getResultTextStyle(entry.homeResult)]}>
+            {entry.homeScore}
+          </Text>
+          <View style={[styles.resultBadge, getResultStyle(entry.homeResult)]}>
+            <Text style={[styles.resultText, getResultTextStyle(entry.homeResult)]}>
+              {entry.homeResult}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.upContainer}>
+          <Text style={styles.upText}>{entry.up}</Text>
+        </View>
+        
+        <View style={styles.teamResult}>
+          <Text style={[styles.scoreText, getResultTextStyle(entry.awayResult)]}>
+            {entry.awayScore}
+          </Text>
+          <View style={[styles.resultBadge, getResultStyle(entry.awayResult)]}>
+            <Text style={[styles.resultText, getResultTextStyle(entry.awayResult)]}>
+              {entry.awayResult}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderSportSection = (sportName: string, entries: PikeEntry[] | any) => {
+    if (sportName === 'basket' && typeof entries === 'object') {
+      return (
+        <View style={styles.sportSection}>
+          <Text style={styles.sportTitle}>Basket</Text>
+          
+          {entries.juego.length > 0 && (
+            <View style={styles.subSection}>
+              <Text style={styles.subSectionTitle}>Juego</Text>
+              {entries.juego.map(renderPikeCard)}
+            </View>
+          )}
+          
+          {entries.mt.length > 0 && (
+            <View style={styles.subSection}>
+              <Text style={styles.subSectionTitle}>MT</Text>
+              {entries.mt.map(renderPikeCard)}
+            </View>
+          )}
+          
+          {entries.cuarto.length > 0 && (
+            <View style={styles.subSection}>
+              <Text style={styles.subSectionTitle}>1/4</Text>
+              {entries.cuarto.map(renderPikeCard)}
+            </View>
+          )}
+        </View>
+      );
+    }
+
+    if (Array.isArray(entries) && entries.length > 0) {
+      return (
+        <View style={styles.sportSection}>
+          <Text style={styles.sportTitle}>
+            {sportName === 'pelota' ? 'Pelota' : sportName === 'futbol' ? 'Fútbol' : sportName}
+          </Text>
+          {entries.map(renderPikeCard)}
+        </View>
+      );
+    }
+
+    return null;
   };
+
+  const CreatePikeModal = () => (
+    <Modal
+      visible={showCreateModal}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => setShowCreateModal(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Agregar Pike</Text>
+          <TouchableOpacity onPress={() => setShowCreateModal(false)}>
+            <X size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          {/* House Dropdown */}
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>House:</Text>
+            <TouchableOpacity 
+              style={styles.dropdown}
+              onPress={() => setShowHouseDropdown(!showHouseDropdown)}
+            >
+              <Text style={styles.dropdownText}>
+                {selectedHouse || 'Seleccionar House'}
+              </Text>
+              <ChevronDown size={20} color="#6B7280" />
+            </TouchableOpacity>
+            {showHouseDropdown && (
+              <View style={styles.dropdownList}>
+                {houses.map((house) => (
+                  <TouchableOpacity
+                    key={house}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setSelectedHouse(house);
+                      setShowHouseDropdown(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{house}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Teams Row */}
+          <View style={styles.teamsRow}>
+            <View style={styles.teamGroup}>
+              <Text style={styles.formLabel}>Equipo (Home):</Text>
+              <TouchableOpacity 
+                style={styles.dropdown}
+                onPress={() => setShowHomeTeamDropdown(!showHomeTeamDropdown)}
+              >
+                <Text style={styles.dropdownText}>
+                  {homeTeam || 'Seleccionar'}
+                </Text>
+                <ChevronDown size={20} color="#6B7280" />
+              </TouchableOpacity>
+              {showHomeTeamDropdown && (
+                <View style={styles.dropdownList}>
+                  {teams.map((team) => (
+                    <TouchableOpacity
+                      key={team}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setHomeTeam(team);
+                        setShowHomeTeamDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{team}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={styles.teamGroup}>
+              <Text style={styles.formLabel}>Equipo (Away):</Text>
+              <TouchableOpacity 
+                style={styles.dropdown}
+                onPress={() => setShowAwayTeamDropdown(!showAwayTeamDropdown)}
+              >
+                <Text style={styles.dropdownText}>
+                  {awayTeam || 'Seleccionar'}
+                </Text>
+                <ChevronDown size={20} color="#6B7280" />
+              </TouchableOpacity>
+              {showAwayTeamDropdown && (
+                <View style={styles.dropdownList}>
+                  {teams.map((team) => (
+                    <TouchableOpacity
+                      key={team}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setAwayTeam(team);
+                        setShowAwayTeamDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{team}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Middle and Up Row */}
+          <View style={styles.middleUpRow}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.formLabel}>Middle:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={middle}
+                onChangeText={setMiddle}
+                placeholder="Ej: 2ym"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.formLabel}>Up:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={up}
+                onChangeText={setUp}
+                placeholder="Ej: pym"
+              />
+            </View>
+          </View>
+
+          {/* Period Selection */}
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Período:</Text>
+            <View style={styles.radioGroup}>
+              {(['G', 'MT', '1/4'] as const).map((period) => (
+                <TouchableOpacity
+                  key={period}
+                  style={styles.radioOption}
+                  onPress={() => setSelectedPeriod(period)}
+                >
+                  <View style={[
+                    styles.radioCircle,
+                    selectedPeriod === period && styles.radioSelected
+                  ]}>
+                    {selectedPeriod === period && <View style={styles.radioInner} />}
+                  </View>
+                  <Text style={styles.radioLabel}>{period}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Tripleta Checkbox */}
+          <View style={styles.formGroup}>
+            <TouchableOpacity
+              style={styles.checkboxOption}
+              onPress={() => setIsTripleta(!isTripleta)}
+            >
+              <View style={[
+                styles.checkbox,
+                isTripleta && styles.checkboxSelected
+              ]}>
+                {isTripleta && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>x3 (Tripleta)</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        <View style={styles.modalActions}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setShowCreateModal(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={handleCreatePike}
+          >
+            <Text style={styles.createButtonText}>Crear</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -184,17 +478,27 @@ export default function Pike() {
           <Text style={styles.subtitle}>Mis Pikes</Text>
         </View>
 
-        {/* Refresh Button */}
-        <TouchableOpacity 
-          style={styles.refreshButton} 
-          onPress={fetchPikeData}
-          disabled={isLoading}
-        >
-          <RefreshCw size={20} color="#FFFFFF" />
-          <Text style={styles.refreshButtonText}>
-            {isLoading ? 'Actualizando...' : 'Actualizar Pikes'}
-          </Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.refreshButton} 
+            onPress={fetchPikeData}
+            disabled={isLoading}
+          >
+            <RefreshCw size={20} color="#FFFFFF" />
+            <Text style={styles.refreshButtonText}>
+              {isLoading ? 'Actualizando...' : 'Actualizar'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => setShowCreateModal(true)}
+          >
+            <Plus size={20} color="#FFFFFF" />
+            <Text style={styles.addButtonText}>Agregar Pike</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Tabs */}
         <View style={styles.tabContainer}>
@@ -226,18 +530,12 @@ export default function Pike() {
           </TouchableOpacity>
         </View>
 
-        {/* Pike Table */}
-        {pikeData[activeTab].length > 0 ? (
-          renderPikeTable(pikeData[activeTab])
-        ) : (
-          <View style={styles.emptyState}>
-            <Target size={64} color="#9CA3AF" />
-            <Text style={styles.emptyStateTitle}>No tienes pikes activos</Text>
-            <Text style={styles.emptyStateText}>
-              Ve a la sección de Dashboard para crear tu primer pike
-            </Text>
-          </View>
-        )}
+        {/* Pike Content */}
+        <View style={styles.pikeContent}>
+          {renderSportSection('pelota', pikeData[activeTab].pelota)}
+          {renderSportSection('futbol', pikeData[activeTab].futbol)}
+          {renderSportSection('basket', pikeData[activeTab].basket)}
+        </View>
 
         {/* Legend */}
         <View style={styles.legend}>
@@ -264,6 +562,8 @@ export default function Pike() {
           </View>
         </View>
       </ScrollView>
+
+      <CreatePikeModal />
     </SafeAreaView>
   );
 }
@@ -279,7 +579,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   logo: {
     fontSize: 32,
@@ -292,20 +592,41 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
   },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
   refreshButton: {
+    flex: 1,
     backgroundColor: '#4F46E5',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 20,
   },
   refreshButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  addButton: {
+    flex: 1,
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
   tabContainer: {
@@ -343,126 +664,131 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     fontWeight: '600',
   },
-  tableContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  pikeContent: {
     marginBottom: 20,
+  },
+  sportSection: {
+    marginBottom: 24,
+  },
+  sportTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  subSection: {
+    marginBottom: 16,
+  },
+  subSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F46E5',
+    marginBottom: 8,
+    paddingLeft: 8,
+  },
+  pikeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  tableHeader: {
-    backgroundColor: '#4F46E5',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  tableHeaderText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  tableContent: {
-    flexDirection: 'row',
-    padding: 8,
-  },
-  column: {
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  pikeRow: {
+  pikeTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginVertical: 2,
-    borderRadius: 6,
+    marginBottom: 8,
   },
-  teamInfo: {
+  pikeBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  teamResult: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   teamName: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 2,
+    flex: 1,
   },
-  opponentName: {
-    fontSize: 11,
-    fontWeight: '400',
-  },
-  resultInfo: {
+  resultBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    minWidth: 24,
     alignItems: 'center',
-    minWidth: 40,
   },
-  score: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  result: {
-    fontSize: 12,
+  resultText: {
+    fontSize: 10,
     fontWeight: 'bold',
   },
-  // Result background colors
+  middleContainer: {
+    flex: 0.6,
+    alignItems: 'center',
+  },
+  middleText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  upContainer: {
+    flex: 0.6,
+    alignItems: 'center',
+  },
+  upText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  scoreText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  // Result colors
   winResult: {
-    backgroundColor: '#D1FAE5', // Light green
+    backgroundColor: '#D1FAE5',
   },
   loseResult: {
-    backgroundColor: '#FEE2E2', // Light red
+    backgroundColor: '#FEE2E2',
   },
   tieResult: {
-    backgroundColor: '#FEF3C7', // Light yellow
+    backgroundColor: '#FEF3C7',
   },
   suspendedResult: {
-    backgroundColor: '#F3F4F6', // Light gray
+    backgroundColor: '#F3F4F6',
   },
   defaultResult: {
     backgroundColor: '#FFFFFF',
   },
-  // Text colors
   winText: {
-    color: '#065F46', // Dark green
+    color: '#065F46',
   },
   loseText: {
-    color: '#991B1B', // Dark red
+    color: '#991B1B',
   },
   tieText: {
-    color: '#92400E', // Dark yellow/orange
+    color: '#92400E',
   },
   suspendedText: {
-    color: '#6B7280', // Gray
+    color: '#6B7280',
     textDecorationLine: 'line-through',
   },
   defaultText: {
     color: '#1F2937',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingVertical: 60,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
   },
   legend: {
     backgroundColor: '#FFFFFF',
@@ -503,5 +829,185 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
     flex: 1,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  dropdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  dropdownList: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    marginTop: 4,
+    maxHeight: 150,
+  },
+  dropdownItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  teamsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  teamGroup: {
+    flex: 1,
+  },
+  middleUpRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  inputGroup: {
+    flex: 1,
+  },
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 14,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    borderColor: '#4F46E5',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#4F46E5',
+  },
+  radioLabel: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  checkboxOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#6B7280',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  createButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#4F46E5',
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
