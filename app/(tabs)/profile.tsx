@@ -1,37 +1,78 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, LogOut, Settings } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import SettingsModal from '@/components/SettingsModal';
 
 export default function Profile() {
+  const { user, logout } = useUser();
+  const { colors } = useTheme();
+  const [showSettings, setShowSettings] = useState(false);
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Cerrar Sesión', 
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            router.replace('/login');
+          }
+        }
+      ]
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Mi Perfil</Text>
+          <Text style={[styles.logo, { color: colors.primary }]}>MIDGARD</Text>
+          <Text style={[styles.subtitle, { color: colors.text }]}>Mi Perfil</Text>
         </View>
 
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
+        <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             <User size={48} color="#FFFFFF" />
           </View>
-          <Text style={styles.username}>Jekyll</Text>
-          <Text style={styles.balance}>F:34,885</Text>
+          <Text style={[styles.username, { color: colors.text }]}>
+            {user?.username || 'Usuario'}
+          </Text>
+          <Text style={[styles.balance, { color: colors.success }]}>
+            F:{user?.balance?.toLocaleString() || '0'}
+          </Text>
         </View>
 
-        <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
-            <Settings size={24} color="#4F46E5" />
-            <Text style={styles.menuText}>Configuración</Text>
+        <View style={[styles.menuSection, { backgroundColor: colors.surface }]}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => setShowSettings(true)}
+          >
+            <Settings size={24} color={colors.primary} />
+            <Text style={[styles.menuText, { color: colors.text }]}>Configuración</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.menuItem}>
-            <LogOut size={24} color="#EF4444" />
-            <Text style={[styles.menuText, { color: '#EF4444' }]}>Cerrar Sesión</Text>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleLogout}
+          >
+            <LogOut size={24} color={colors.error} />
+            <Text style={[styles.menuText, { color: colors.error }]}>Cerrar Sesión</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <SettingsModal
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -39,7 +80,6 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   content: {
     flexGrow: 1,
@@ -52,16 +92,13 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4F46E5',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1F2937',
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 30,
     alignItems: 'center',
@@ -79,7 +116,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -87,16 +123,13 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 8,
   },
   balance: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#10B981',
   },
   menuSection: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 8,
     shadowColor: '#000',
@@ -118,6 +151,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 16,
-    color: '#1F2937',
   },
 });

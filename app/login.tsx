@@ -3,8 +3,12 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
+import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Login() {
+  const { setUser } = useUser();
+  const { colors } = useTheme();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,8 +51,12 @@ export default function Login() {
       console.log('Parsed data:', data);
 
       if (response.ok && data.status) {
-        // Guardar token si es necesario
-        // await AsyncStorage.setItem('authToken', data.token);
+        // Set user data
+        setUser({
+          id: '1',
+          username: username,
+          balance: 34885
+        });
         router.replace('/(tabs)');
       } else {
         Alert.alert('Error', data.message || 'Credenciales incorrectas');
@@ -59,6 +67,11 @@ export default function Login() {
       //console.log('Response text was:', responseText); // Esto te mostrará el HTML completo
       Alert.alert('Error', 'Error de conexión. Inténtalo de nuevo.');
       // Para desarrollo, permitir login sin conexión
+      setUser({
+        id: '1',
+        username: username || 'Jekyll',
+        balance: 34885
+      });
       setIsLoading(false);
       router.replace('/(tabs)');
     } finally {
@@ -67,7 +80,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
       <View style={styles.content}>
         {/* Logo and Title */}
         <View style={styles.header}>
@@ -84,7 +97,7 @@ export default function Login() {
             <View style={styles.inputWrapper}>
               <User size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Usuario"
                 placeholderTextColor="#9CA3AF"
                 value={username}
@@ -99,7 +112,7 @@ export default function Login() {
             <View style={styles.inputWrapper}>
               <Lock size={20} color="#6B7280" style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Contraseña"
                 placeholderTextColor="#9CA3AF"
                 value={password}
@@ -145,7 +158,6 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4F46E5',
   },
   content: {
     flex: 1,

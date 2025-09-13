@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RefreshCw, CreditCard as Edit, Zap, ChevronDown } from 'lucide-react-native';
 import PikeModal from '@/components/PikeModal';
 import { useDate } from '@/contexts/DateContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Game {
   id: string;
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   
   const { selectedDate, setSelectedDate, getDateString } = useDate();
+  const { colors } = useTheme();
 
   const handleUpdateScores = async () => {
     setIsLoading(true);
@@ -118,48 +120,48 @@ export default function Dashboard() {
   }, {} as Record<string, Game[]>);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>MIDGARD</Text>
-          <Text style={styles.subtitle}>Dashboard</Text>
+          <Text style={[styles.logo, { color: colors.primary }]}>MIDGARD</Text>
+          <Text style={[styles.subtitle, { color: colors.text }]}>Dashboard</Text>
         </View>
 
         {/* Date Selector */}
         <View style={styles.dateContainer}>
-          <View style={styles.dateSelector}>
+          <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity onPress={() => updateDate('day', false)}>
-              <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+              <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
-            <Text style={styles.dateText}>{selectedDate.day.toString().padStart(2, '0')}</Text>
+            <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.day.toString().padStart(2, '0')}</Text>
             <TouchableOpacity onPress={() => updateDate('day', true)}>
-              <ChevronDown size={16} color="#6B7280" />
+              <ChevronDown size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
-          <View style={styles.dateSelector}>
+          <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity onPress={() => updateDate('month', false)}>
-              <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+              <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
-            <Text style={styles.dateText}>{selectedDate.month.toString().padStart(2, '0')}</Text>
+            <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.month.toString().padStart(2, '0')}</Text>
             <TouchableOpacity onPress={() => updateDate('month', true)}>
-              <ChevronDown size={16} color="#6B7280" />
+              <ChevronDown size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
-          <View style={styles.dateSelector}>
+          <View style={[styles.dateSelector, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TouchableOpacity onPress={() => updateDate('year', false)}>
-              <ChevronDown size={16} color="#6B7280" style={{ transform: [{ rotate: '180deg' }] }} />
+              <ChevronDown size={16} color={colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
-            <Text style={styles.dateText}>{selectedDate.year}</Text>
+            <Text style={[styles.dateText, { color: colors.text }]}>{selectedDate.year}</Text>
             <TouchableOpacity onPress={() => updateDate('year', true)}>
-              <ChevronDown size={16} color="#6B7280" />
+              <ChevronDown size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Update Button */}
         <TouchableOpacity 
-          style={styles.updateButton} 
+          style={[styles.updateButton, { backgroundColor: colors.primary }]} 
           onPress={handleUpdateScores}
           disabled={isLoading}
         >
@@ -178,12 +180,12 @@ export default function Dashboard() {
           <View style={styles.gamesSection}>
             {Object.entries(groupedGames).map(([league, leagueGames]) => (
               <View key={league} style={styles.leagueSection}>
-                <Text style={styles.leagueTitle}>{league}</Text>
+                <Text style={[styles.leagueTitle, { color: colors.text }]}>{league}</Text>
                 
                 {leagueGames.map((game) => (
-                  <View key={game.id} style={styles.gameCard}>
+                  <View key={game.id} style={[styles.gameCard, { backgroundColor: colors.surface }]}>
                     <View style={styles.gameHeader}>
-                      <Text style={styles.gameTime}>{game.time}</Text>
+                      <Text style={[styles.gameTime, { color: colors.textSecondary }]}>{game.time}</Text>
                     </View>
                     
                     <View style={styles.gameContent}>
@@ -192,44 +194,44 @@ export default function Dashboard() {
                           {game.homeTeamLogo ? (
                             <Image source={{ uri: game.homeTeamLogo }} style={styles.teamLogoImage} />
                           ) : (
-                            <View style={styles.teamLogo}>
+                            <View style={[styles.teamLogo, { backgroundColor: colors.primary }]}>
                               <Text style={styles.teamLogoText}>
                                 {game.homeTeam.split(' ').map(word => word[0]).join('')}
                               </Text>
                             </View>
                           )}
-                          <Text style={styles.teamName} numberOfLines={1}>
+                          <Text style={[styles.teamName, { color: colors.text }]} numberOfLines={1}>
                             {game.homeTeam}
                           </Text>
                         </View>
                         
                         <View style={styles.scoreContainer}>
-                          <Text style={styles.record}>{game.homeRecord}</Text>
-                          <Text style={styles.score}>{game.homeScore}</Text>
+                          <Text style={[styles.record, { color: colors.textSecondary }]}>{game.homeRecord}</Text>
+                          <Text style={[styles.score, { color: colors.text }]}>{game.homeScore}</Text>
                         </View>
                       </View>
 
-                      <Text style={styles.vs}>VS</Text>
+                      <Text style={[styles.vs, { color: colors.textSecondary }]}>VS</Text>
 
                       <View style={styles.teamContainer}>
                         <View style={styles.team}>
                           {game.awayTeamLogo ? (
                             <Image source={{ uri: game.awayTeamLogo }} style={styles.teamLogoImage} />
                           ) : (
-                            <View style={styles.teamLogo}>
+                            <View style={[styles.teamLogo, { backgroundColor: colors.primary }]}>
                               <Text style={styles.teamLogoText}>
                                 {game.awayTeam.split(' ').map(word => word[0]).join('')}
                               </Text>
                             </View>
                           )}
-                          <Text style={styles.teamName} numberOfLines={1}>
+                          <Text style={[styles.teamName, { color: colors.text }]} numberOfLines={1}>
                             {game.awayTeam}
                           </Text>
                         </View>
                         
                         <View style={styles.scoreContainer}>
-                          <Text style={styles.record}>{game.awayRecord}</Text>
-                          <Text style={styles.score}>{game.awayScore}</Text>
+                          <Text style={[styles.record, { color: colors.textSecondary }]}>{game.awayRecord}</Text>
+                          <Text style={[styles.score, { color: colors.text }]}>{game.awayScore}</Text>
                         </View>
                       </View>
                     </View>
@@ -259,16 +261,16 @@ export default function Dashboard() {
             ))}
           </View>
         ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
+          <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
               Presiona "Actualizar Puntajes" para obtener los juegos del día
             </Text>
           </View>
         )}
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Copyright © Midgard 2025</Text>
+        <View style={[styles.footer, { borderTopColor: colors.border }]}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>Copyright © Midgard 2025</Text>
         </View>
       </ScrollView>
 
@@ -284,7 +286,6 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   content: {
     flexGrow: 1,
@@ -297,13 +298,11 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4F46E5',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1F2937',
   },
   dateContainer: {
     flexDirection: 'row',
@@ -312,12 +311,10 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   dateSelector: {
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     minWidth: 60,
     alignItems: 'center',
     gap: 4,
@@ -325,10 +322,8 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1F2937',
   },
   updateButton: {
-    backgroundColor: '#4F46E5',
     paddingVertical: 15,
     paddingHorizontal: 25,
     borderRadius: 8,
@@ -352,12 +347,10 @@ const styles = StyleSheet.create({
   leagueTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 15,
     paddingLeft: 5,
   },
   gameCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -377,7 +370,6 @@ const styles = StyleSheet.create({
   gameTime: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   gameContent: {
     flexDirection: 'row',
@@ -397,7 +389,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -416,7 +407,6 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1F2937',
     textAlign: 'center',
     maxWidth: 80,
   },
@@ -426,18 +416,15 @@ const styles = StyleSheet.create({
   record: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
     marginBottom: 2,
   },
   score: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1F2937',
   },
   vs: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#6B7280',
     marginHorizontal: 10,
   },
   actionButtons: {
@@ -475,7 +462,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     padding: 40,
     borderRadius: 12,
     marginBottom: 30,
@@ -490,7 +476,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -498,10 +483,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   footerText: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
 });
