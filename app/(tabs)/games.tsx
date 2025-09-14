@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Eye, Target, Trash2, Send, RefreshCw, CreditCard as Edit, X } from 'lucide-react-native';
 import JugadasModal from '@/components/JugadasModal';
@@ -10,6 +10,7 @@ import SearchableDropdown from '@/components/SearchableDropdown';
 import { useDate } from '@/contexts/DateContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import DateSelector from '@/components/DateSelector';
+import ViewShot from 'react-native-view-shot';
 
 interface Jugada {
   id: string;
@@ -100,6 +101,10 @@ export default function Jugadas() {
   const [showEditTripletaModal, setShowEditTripletaModal] = useState(false);
   const [selectedJugada, setSelectedJugada] = useState<Jugada | null>(null);
   const [selectedTripleta, setSelectedTripleta] = useState<Tripleta | null>(null);
+  const [selectedJugadaId, setSelectedJugadaId] = useState<string | null>(null);
+  const [selectedTripletaId, setSelectedTripletaId] = useState<string | null>(null);
+  const viewShotRef = useRef<ViewShot>(null);
+  const [isSending, setIsSending] = useState(false);
   
   // Hover states for individual jugadas
   const [hoveredJugada, setHoveredJugada] = useState<string | null>(null);
@@ -622,6 +627,61 @@ export default function Jugadas() {
     }
   };
 
+  const enviarImagen = async (blob: Blob) => {
+    try {
+      console.log('Imagen lista para enviar, tamaño:', blob.size);
+      
+      const formData = new FormData();
+      formData.append('imagen', blob as any);
+      
+      const response = await fetch('https://midgard.ct.ws/send_tlgrm', {
+        method: 'POST',
+        headers: {
+          'User-Agent': 'MidgardApp/1.0',
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log('Respuesta:', data);
+      
+      if (response.ok) {
+        Alert.alert('Éxito', 'Imagen enviada a Telegram correctamente');
+      } else {
+        Alert.alert('Error', data.message || 'Error al enviar imagen a Telegram');
+      }
+    } catch (error) {
+      console.error('Error enviando imagen:', error);
+      Alert.alert('Error', 'Error de conexión al enviar imagen');
+    }
+  };
+
+  const handleEnviarTelegram = async () => {
+    if (!viewShotRef.current) {
+      Alert.alert('Error', 'No se pudo capturar la pantalla');
+      return;
+    }
+
+    setIsSending(true);
+    
+    try {
+      const uri = await viewShotRef.current.capture();
+      console.log('Captura realizada:', uri);
+      
+      // Convertir URI a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      await enviarImagen(blob);
+      
+    } catch (error) {
+      console.error('Error capturando pantalla:', error);
+      Alert.alert('Error', 'No se pudo capturar la pantalla');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -886,309 +946,327 @@ export default function Jugadas() {
           </TouchableOpacity>
         </View>
 
-        {/* Cuentas de Jugadores */}
-        <View style={styles.cuentasSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Cuentas de Jugadores</Text>
-          
-          {cuentas.map((cuenta) => (
-            <View key={cuenta.id} style={[styles.cuentaCard, { backgroundColor: colors.surface }]}>
-              {/* Header de la cuenta */}
-              <View style={[styles.cuentaHeader, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.cuentaNombre, { color: colors.text }]}>{cuenta.nombre}</Text>
-                <View style={styles.cuentaActions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: colors.background }]}
-                    onPress={() => {
-                      setSelectedPlayer(cuenta);
-                      setShowJugadasModal(true);
-                    }}
-                  >
-                    <Eye size={20} color="#4F46E5" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: colors.background }]}
-                    onPress={() => {
-                      setSelectedPlayer(cuenta);
-                      setShowTripletasModal(true);
-                    }}
-                  >
-                    <Target size={20} color="#10B981" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, { backgroundColor: colors.background }]}
-                    onPress={() => eliminarCuenta(cuenta.id)}
-                  >
-                    <Trash2 size={20} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              </View>
+        <ViewShot ref={viewShotRef} options={{ format: "png", quality: 0.9 }}>
 
-              {/* Jugadas Sencillas */}
-              {cuenta.jugadas.length > 0 && (
-                <View style={styles.jugadasSection}>
-                  <View style={styles.jugadasColumns}>
-                    {/* Columna Ganado (G) */}
-                    <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
-                      <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>G</Text>
-                      {cuenta.jugadas
-                        .filter(jugada => jugada.resultado === 'G')
-                        .map((jugada, index) => (
-                          <View 
-                            key={jugada.id} 
-                            style={[
-                              styles.jugadaItem,
-                              Platform.OS === 'web' && styles.jugadaItemHoverable
-                            ]}
-                            onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
-                            onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
-                          >
-                            <View style={styles.jugadaContent}>
-                              <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
-                                {jugada.monto} {jugada.equipo} 
-                                 {jugada.periodo == 'G'? '':jugada.periodo} 
-                                {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
-                              </Text>
-                              {(hoveredJugada === jugada.id || Platform.OS !== 'web') && (
-                                <View style={styles.jugadaActions}>
-                                  <TouchableOpacity
-                                    style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
-                                    onPress={() => handleEditJugadaInline(jugada)}
-                                  >
-                                    <Edit size={12} color="#FFFFFF" />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
-                                    onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
-                                  >
-                                    <X size={12} color="#FFFFFF" />
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </View>
+          {/* Cuentas de Jugadores */}
+          <View style={styles.cuentasSection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Cuentas de Jugadores</Text>
+            
+            {cuentas.map((cuenta) => (
+              <View key={cuenta.id} style={[styles.cuentaCard, { backgroundColor: colors.surface }]}>
+                {/* Header de la cuenta */}
+                <View style={[styles.cuentaHeader, { borderBottomColor: colors.border }]}>
+                  <Text style={[styles.cuentaNombre, { color: colors.text }]}>{cuenta.nombre}</Text>
+                  <View style={styles.cuentaActions}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: colors.background }]}
+                      onPress={() => {
+                        setSelectedPlayer(cuenta);
+                        setShowJugadasModal(true);
+                      }}
+                    >
+                      <Eye size={20} color="#4F46E5" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: colors.background }]}
+                      onPress={() => {
+                        setSelectedPlayer(cuenta);
+                        setShowTripletasModal(true);
+                      }}
+                    >
+                      <Target size={20} color="#10B981" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: colors.background }]}
+                      onPress={() => eliminarCuenta(cuenta.id)}
+                    >
+                      <Trash2 size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Jugadas Sencillas */}
+                {cuenta.jugadas.length > 0 && (
+                  <View style={styles.jugadasSection}>
+                    <View style={styles.jugadasColumns}>
+                      {/* Columna Ganado (G) */}
+                      <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
+                        <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>G</Text>
+                        {cuenta.jugadas
+                          .filter(jugada => jugada.resultado === 'G')
+                          .map((jugada, index) => (
+                            <TouchableOpacity 
+                              key={jugada.id} 
+                              style={[
+                                styles.jugadaItem,
+                                Platform.OS === 'web' && styles.jugadaItemHoverable
+                              ]}
+                              onPress={() => setSelectedJugadaId(selectedJugadaId === jugada.id ? null : jugada.id)}
+                              activeOpacity={0.7}
+                              onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
+                              onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
+                            >
+                              <View style={styles.jugadaContent}>
+                                <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
+                                  {jugada.monto} {jugada.equipo} 
+                                   {jugada.periodo == 'G'? '':jugada.periodo} 
+                                  {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
+                                </Text>
+                                {selectedJugadaId === jugada.id && (
+                                  <View style={styles.jugadaActions}>
+                                    <TouchableOpacity
+                                      style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
+                                      onPress={() => handleEditJugadaInline(jugada)}
+                                    >
+                                      <Edit size={12} color="#FFFFFF" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                      style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
+                                      onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
+                                    >
+                                      <X size={12} color="#FFFFFF" />
+                                    </TouchableOpacity>
+                                  </View>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                      </View>
+
+                      {/* Columna Perdido (P) */}
+                      <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
+                        <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>P</Text>
+                        {cuenta.jugadas
+                          .filter(jugada => jugada.resultado === 'P')
+                          .map((jugada, index) => (
+                            <TouchableOpacity 
+                              key={jugada.id} 
+                              style={[
+                                styles.jugadaItem,
+                                Platform.OS === 'web' && styles.jugadaItemHoverable
+                              ]}
+                              onPress={() => setSelectedJugadaId(selectedJugadaId === jugada.id ? null : jugada.id)}
+                              activeOpacity={0.7}
+                              onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
+                              onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
+                            >
+                              <View style={styles.jugadaContent}>
+                                <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
+                                  {jugada.monto} {jugada.equipo} 
+                                   {jugada.periodo == 'G'? '': jugada.periodo} 
+                                  {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
+                                </Text>
+                                {selectedJugadaId === jugada.id && (
+                                  <View style={styles.jugadaActions}>
+                                    <TouchableOpacity
+                                      style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
+                                      onPress={() => handleEditJugadaInline(jugada)}
+                                    >
+                                      <Edit size={12} color="#FFFFFF" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                      style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
+                                      onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
+                                    >
+                                      <X size={12} color="#FFFFFF" />
+                                    </TouchableOpacity>
+                                  </View>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Tripletas */}
+                {cuenta.tripletas.length > 0 && (
+                  <View style={styles.tripletasSection}>
+                    <View style={styles.tripletasColumns}>
+                      <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
+                        <View style={styles.tripletaRow}>
+                          <Text style={[styles.tripletaLabel, { color: colors.text }]}>C:</Text>
+                          <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
+                        </View>
+                        <View style={styles.tripletaRow}>
+                          <Text style={[styles.tripletaLabel, { color: colors.text }]}>L:</Text>
+                          <Text style={[styles.tripletaValue, { color: colors.text }]}>13500</Text>
+                        </View>
+                        <View style={styles.tripletaRow}>
+                          <Text style={[styles.tripletaLabel, { color: colors.text }]}>P:</Text>
+                          <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
+                        </View>
+                        <View style={styles.tripletaRow}>
+                          <Text style={[styles.tripletaLabel, { color: colors.text }]}>F:</Text>
+                          <Text style={[styles.tripletaValue, { color: colors.text }]}>-1500</Text>
+                        </View>
+                      </View>
+
+                      <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
+                        <View style={styles.tripletaTypeColumns}>
+                          <View style={styles.tripletaTypeColumn}>
+                            <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>I</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
+                            <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                            <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
                           </View>
-                        ))}
-                    </View>
-
-                    {/* Columna Perdido (P) */}
-                    <View style={[styles.jugadasColumn, { backgroundColor: colors.background }]}>
-                      <Text style={[styles.columnHeader, { backgroundColor: colors.border, color: colors.text }]}>P</Text>
-                      {cuenta.jugadas
-                        .filter(jugada => jugada.resultado === 'P')
-                        .map((jugada, index) => (
-                          <View 
-                            key={jugada.id} 
-                            style={[
-                              styles.jugadaItem,
-                              Platform.OS === 'web' && styles.jugadaItemHoverable
-                            ]}
-                            onMouseEnter={Platform.OS === 'web' ? () => setHoveredJugada(jugada.id) : undefined}
-                            onMouseLeave={Platform.OS === 'web' ? () => setHoveredJugada(null) : undefined}
-                          >
-                            <View style={styles.jugadaContent}>
-                              <Text style={[styles.jugadaEquipoText, { color: colors.text, borderBottomColor: colors.border }]}>
-                                {jugada.monto} {jugada.equipo} 
-                                 {jugada.periodo == 'G'? '': jugada.periodo} 
-                                {jugada.tipo == 'alta'? ' ↑':jugada.tipo == 'baja'?'':' ↓'}
-                              </Text>
-                              {(hoveredJugada === jugada.id || Platform.OS !== 'web') && (
-                                <View style={styles.jugadaActions}>
-                                  <TouchableOpacity
-                                    style={[styles.jugadaActionButton, { backgroundColor: colors.warning }]}
-                                    onPress={() => handleEditJugadaInline(jugada)}
-                                  >
-                                    <Edit size={12} color="#FFFFFF" />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={[styles.jugadaActionButton, { backgroundColor: colors.error }]}
-                                    onPress={() => handleDeleteJugadaInline(jugada.id, cuenta.nombre)}
-                                  >
-                                    <X size={12} color="#FFFFFF" />
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </View>
+                          
+                          <View style={styles.tripletaTypeColumn}>
+                            <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>II</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>5000</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>15000</Text>
+                            <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                            <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>60000</Text>
                           </View>
-                        ))}
-                    </View>
-                  </View>
-                </View>
-              )}
-
-              {/* Tripletas */}
-              {cuenta.tripletas.length > 0 && (
-                <View style={styles.tripletasSection}>
-                  <View style={styles.tripletasColumns}>
-                    <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
-                      <View style={styles.tripletaRow}>
-                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>C:</Text>
-                        <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
-                      </View>
-                      <View style={styles.tripletaRow}>
-                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>L:</Text>
-                        <Text style={[styles.tripletaValue, { color: colors.text }]}>13500</Text>
-                      </View>
-                      <View style={styles.tripletaRow}>
-                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>P:</Text>
-                        <Text style={[styles.tripletaValue, { color: colors.text }]}>15000</Text>
-                      </View>
-                      <View style={styles.tripletaRow}>
-                        <Text style={[styles.tripletaLabel, { color: colors.text }]}>F:</Text>
-                        <Text style={[styles.tripletaValue, { color: colors.text }]}>-1500</Text>
-                      </View>
-                    </View>
-
-                    <View style={[styles.tripletasColumn, { backgroundColor: colors.background }]}>
-                      <View style={styles.tripletaTypeColumns}>
-                        <View style={styles.tripletaTypeColumn}>
-                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>I</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
-                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
-                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
-                        </View>
-                        
-                        <View style={styles.tripletaTypeColumn}>
-                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>II</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>5000</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>15000</Text>
-                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
-                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>60000</Text>
-                        </View>
-                        
-                        <View style={styles.tripletaTypeColumn}>
-                          <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>III</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
-                          <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
-                          <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
-                          <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
+                          
+                          <View style={styles.tripletaTypeColumn}>
+                            <Text style={[styles.tripletaTypeLabel, { color: colors.text }]}>III</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}>0</Text>
+                            <Text style={[styles.tripletaTypeValue, { color: colors.text }]}></Text>
+                            <View style={[styles.tripletaTypeSeparator, { backgroundColor: colors.text }]} />
+                            <Text style={[styles.tripletaTypeTotalValue, { color: colors.text }]}>0</Text>
+                          </View>
                         </View>
                       </View>
                     </View>
                   </View>
-                </View>
-              )}
+                )}
 
-              {/* Cálculo Final */}
-              <View style={[styles.finalCalculationSection, { borderTopColor: colors.border }]}>
-                <View style={styles.finalCalculationColumns}>
-                  <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
-                    <View style={styles.calculationItem}>
-                      <Text style={[styles.calculationValue, { color: colors.text }]}>+11000 (2%)</Text>
+                {/* Cálculo Final */}
+                <View style={[styles.finalCalculationSection, { borderTopColor: colors.border }]}>
+                  <View style={styles.finalCalculationColumns}>
+                    <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
+                      <View style={styles.calculationItem}>
+                        <Text style={[styles.calculationValue, { color: colors.text }]}>+11000 (2%)</Text>
+                      </View>
+                      <View style={styles.calculationItem}>
+                        <Text style={[styles.calculationValue, { color: colors.text }]}>101000</Text>
+                      </View>
+                      <View style={styles.calculationItem}>
+                        <Text style={[styles.calculationValue, { color: colors.text }]}>+1500 (Tripleta)</Text>
+                      </View>
+                      <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
+                      <View style={[styles.calculationTotal, styles.calculationTotalWin]}>
+                        <Text style={styles.calculationTotalText}>347500</Text>
+                      </View>
                     </View>
-                    <View style={styles.calculationItem}>
-                      <Text style={[styles.calculationValue, { color: colors.text }]}>101000</Text>
-                    </View>
-                    <View style={styles.calculationItem}>
-                      <Text style={[styles.calculationValue, { color: colors.text }]}>+1500 (Tripleta)</Text>
-                    </View>
-                    <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
-                    <View style={[styles.calculationTotal, styles.calculationTotalWin]}>
-                      <Text style={styles.calculationTotalText}>347500</Text>
+
+                    <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
+                      <View style={styles.calculationItem}>
+                        <Text style={[styles.calculationValue, { color: colors.text }]}>-102500</Text>
+                      </View>
+                      <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
+                      <View style={[styles.calculationTotal, styles.calculationTotalLoss]}>
+                        <Text style={styles.calculationTotalText}>102500</Text>
+                      </View>
                     </View>
                   </View>
+                </View>
+              </View>
+            ))}
+          </View>
 
-                  <View style={[styles.finalCalculationColumn, { backgroundColor: colors.background }]}>
-                    <View style={styles.calculationItem}>
-                      <Text style={[styles.calculationValue, { color: colors.text }]}>-102500</Text>
-                    </View>
-                    <View style={[styles.calculationSeparator, { backgroundColor: colors.text }]} />
-                    <View style={[styles.calculationTotal, styles.calculationTotalLoss]}>
-                      <Text style={styles.calculationTotalText}>102500</Text>
-                    </View>
-                  </View>
+          {/* Detalles Generales */}
+          <View style={styles.detallesGeneralesContainer}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Detalles Generales</Text>
+            
+            {/* Jugado Card */}
+            <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Jugado</Text>
+              <View style={styles.cardContent}>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total jugado:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalJugado)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total ganado:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalGanado)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total perdido:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalPerdido)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total porciento (2% + 5%):</Text>
+                  <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalPorciento)]}>{formatNumber(detallesGenerales.jugado.totalPorciento)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total House:</Text>
+                  <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalHouse)]}>{formatNumber(detallesGenerales.jugado.totalHouse)}</Text>
                 </View>
               </View>
             </View>
-          ))}
-        </View>
 
-        {/* Detalles Generales */}
-        <View style={styles.detallesGeneralesContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Detalles Generales</Text>
-          
-          {/* Jugado Card */}
-          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Jugado</Text>
-            <View style={styles.cardContent}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total jugado:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalJugado)}</Text>
+            {/* Tripletas Card */}
+            <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Tripletas</Text>
+              <View style={styles.cardContent}>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Crudo:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.crudo)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Limpio:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.limpio)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Premio:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.premio)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.total)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total partes:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.totalPartes)}</Text>
+                </View>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total ganado:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalGanado)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total perdido:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.jugado.totalPerdido)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total porciento (2% + 5%):</Text>
-                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalPorciento)]}>{formatNumber(detallesGenerales.jugado.totalPorciento)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total House:</Text>
-                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.jugado.totalHouse)]}>{formatNumber(detallesGenerales.jugado.totalHouse)}</Text>
+            </View>
+
+            {/* Cuenta Diaria Card */}
+            <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Cuenta diaria</Text>
+              <View style={styles.cardContent}>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Fondo:</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.cuentaDiaria.fondo)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Gane por cuenta diaria:</Text>
+                  <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)]}>{detallesGenerales.cuentaDiaria.ganePorCuentaDiaria > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Tripletas:</Text>
+                  <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.tripletas)]}>{detallesGenerales.cuentaDiaria.tripletas > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.tripletas)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Cuenta Final:</Text>
+                  <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.cuentaFinal)]}>{formatNumber(detallesGenerales.cuentaDiaria.cuentaFinal)}</Text>
+                </View>
               </View>
             </View>
           </View>
+        </ViewShot>
 
-          {/* Tripletas Card */}
-          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Tripletas</Text>
-            <View style={styles.cardContent}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Crudo:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.crudo)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Limpio:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.limpio)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Premio:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.premio)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.total)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Total partes:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.tripletas.totalPartes)}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Cuenta Diaria Card */}
-          <View style={[styles.detailCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Cuenta diaria</Text>
-            <View style={styles.cardContent}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Fondo:</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatNumber(detallesGenerales.cuentaDiaria.fondo)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Gane por cuenta diaria:</Text>
-                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)]}>{detallesGenerales.cuentaDiaria.ganePorCuentaDiaria > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.ganePorCuentaDiaria)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Tripletas:</Text>
-                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.tripletas)]}>{detallesGenerales.cuentaDiaria.tripletas > 0 ? '+' : ''}{formatNumber(detallesGenerales.cuentaDiaria.tripletas)}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Cuenta Final:</Text>
-                <Text style={[styles.detailValue, getValueStyle(detallesGenerales.cuentaDiaria.cuentaFinal)]}>{formatNumber(detallesGenerales.cuentaDiaria.cuentaFinal)}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Send to Telegram Button */}
-        <TouchableOpacity style={[styles.telegramButton, { backgroundColor: '#0088CC' }]}>
-          <Send size={20} color="#FFFFFF" />
-          <Text style={[styles.telegramButtonText, { color: '#FFFFFF' }]}>Enviar a Telegram</Text>
+        {/* Enviar a Telegram Button */}
+        <TouchableOpacity 
+          style={[styles.telegramButton, { backgroundColor: colors.primary }]} 
+          onPress={handleEnviarTelegram}
+          disabled={isSending}
+        >
+          {isSending ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Send size={20} color="#FFFFFF" />
+          )}
+          <Text style={[styles.telegramButtonText, { color: '#FFFFFF' }]}>
+            {isSending ? 'Enviando...' : 'Enviar a Telegram'}
+          </Text>
         </TouchableOpacity>
+
       </ScrollView>
 
       {/* Modals */}
