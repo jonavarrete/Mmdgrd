@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Target, RefreshCw, Plus, X, ChevronDown } from 'lucide-react-native';
+import { Target, RefreshCw, Plus, X, ChevronDown, CreditCard as Edit } from 'lucide-react-native';
 import { useDate } from '@/contexts/DateContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import DateSelector from '@/components/DateSelector';
@@ -92,6 +92,7 @@ export default function Pike() {
   const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPike, setEditingPike] = useState<PikeEntry | null>(null);
   
   // Form states
   const [selectedHouse, setSelectedHouse] = useState('');
@@ -104,6 +105,38 @@ export default function Pike() {
   const [showHouseDropdown, setShowHouseDropdown] = useState(false);
   const [showHomeTeamDropdown, setShowHomeTeamDropdown] = useState(false);
   const [showAwayTeamDropdown, setShowAwayTeamDropdown] = useState(false);
+
+  const resetForm = () => {
+    setSelectedHouse('');
+    setHomeTeam('');
+    setAwayTeam('');
+    setMiddle('');
+    setUp('');
+    setSelectedPeriod('G');
+    setIsTripleta(false);
+    setEditingPike(null);
+  };
+
+  const handleEditPike = (pike: PikeEntry) => {
+    setEditingPike(pike);
+    setSelectedHouse(pike.house);
+    setHomeTeam(pike.homeTeam);
+    setAwayTeam(pike.awayTeam);
+    setMiddle(pike.middle);
+    setUp(pike.up);
+    setSelectedPeriod(pike.period);
+    setIsTripleta(pike.isTripleta);
+    setShowCreateModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowCreateModal(false);
+    resetForm();
+    // Close all dropdowns
+    setShowHouseDropdown(false);
+    setShowHomeTeamDropdown(false);
+    setShowAwayTeamDropdown(false);
+  };
 
   const fetchPikeData = async () => {
     setIsLoading(true);
@@ -246,20 +279,19 @@ export default function Pike() {
     */
 
     Alert.alert('Éxito', 'Pike creado correctamente');
-    setShowCreateModal(false);
-    
-    // Reset form
-    setSelectedHouse('');
-    setHomeTeam('');
-    setAwayTeam('');
-    setMiddle('');
-    setUp('');
-    setSelectedPeriod('G');
-    setIsTripleta(false);
+    handleCloseModal();
   };
 
   const renderPikeCard = (entry: PikeEntry) => (
     <View key={entry.id} style={[styles.pikeCard, { backgroundColor: colors.surface }]}>
+      {/* Edit Button */}
+      <TouchableOpacity 
+        style={[styles.editPikeButton, { backgroundColor: colors.warning }]}
+        onPress={() => handleEditPike(entry)}
+      >
+        <Edit size={16} color="#FFFFFF" />
+      </TouchableOpacity>
+      
       {/* Top Row */}
       <View style={styles.pikeTopRow}>
         <View style={styles.teamResult}>
@@ -369,41 +401,43 @@ export default function Pike() {
       visible={showCreateModal}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={() => setShowCreateModal(false)}
+      onRequestClose={handleCloseModal}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Agregar Pike</Text>
-          <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-            <X size={24} color="#6B7280" />
+      <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>
+            {editingPike ? 'Editar Pike' : 'Agregar Pike'}
+          </Text>
+          <TouchableOpacity onPress={handleCloseModal}>
+            <X size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.modalContent}>
           {/* House Dropdown */}
           <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>House:</Text>
+            <Text style={[styles.formLabel, { color: colors.text }]}>House:</Text>
             <TouchableOpacity 
-              style={styles.dropdown}
+              style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => setShowHouseDropdown(!showHouseDropdown)}
             >
-              <Text style={styles.dropdownText}>
+              <Text style={[styles.dropdownText, { color: selectedHouse ? colors.text : colors.textSecondary }]}>
                 {selectedHouse || 'Seleccionar House'}
               </Text>
-              <ChevronDown size={20} color="#6B7280" />
+              <ChevronDown size={20} color={colors.textSecondary} />
             </TouchableOpacity>
             {showHouseDropdown && (
-              <View style={styles.dropdownList}>
+              <View style={[styles.dropdownList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 {houses.map((house) => (
                   <TouchableOpacity
                     key={house}
-                    style={styles.dropdownItem}
+                    style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
                     onPress={() => {
                       setSelectedHouse(house);
                       setShowHouseDropdown(false);
                     }}
                   >
-                    <Text style={styles.dropdownItemText}>{house}</Text>
+                    <Text style={[styles.dropdownItemText, { color: colors.text }]}>{house}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -413,28 +447,28 @@ export default function Pike() {
           {/* Teams Row */}
           <View style={styles.teamsRow}>
             <View style={styles.teamGroup}>
-              <Text style={styles.formLabel}>Equipo (Home):</Text>
+              <Text style={[styles.formLabel, { color: colors.text }]}>Equipo (Home):</Text>
               <TouchableOpacity 
-                style={styles.dropdown}
+                style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 onPress={() => setShowHomeTeamDropdown(!showHomeTeamDropdown)}
               >
-                <Text style={styles.dropdownText}>
+                <Text style={[styles.dropdownText, { color: homeTeam ? colors.text : colors.textSecondary }]}>
                   {homeTeam || 'Seleccionar'}
                 </Text>
-                <ChevronDown size={20} color="#6B7280" />
+                <ChevronDown size={20} color={colors.textSecondary} />
               </TouchableOpacity>
               {showHomeTeamDropdown && (
-                <View style={styles.dropdownList}>
+                <View style={[styles.dropdownList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   {teams.map((team) => (
                     <TouchableOpacity
                       key={team}
-                      style={styles.dropdownItem}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
                       onPress={() => {
                         setHomeTeam(team);
                         setShowHomeTeamDropdown(false);
                       }}
                     >
-                      <Text style={styles.dropdownItemText}>{team}</Text>
+                      <Text style={[styles.dropdownItemText, { color: colors.text }]}>{team}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -442,28 +476,28 @@ export default function Pike() {
             </View>
 
             <View style={styles.teamGroup}>
-              <Text style={styles.formLabel}>Equipo (Away):</Text>
+              <Text style={[styles.formLabel, { color: colors.text }]}>Equipo (Away):</Text>
               <TouchableOpacity 
-                style={styles.dropdown}
+                style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 onPress={() => setShowAwayTeamDropdown(!showAwayTeamDropdown)}
               >
-                <Text style={styles.dropdownText}>
+                <Text style={[styles.dropdownText, { color: awayTeam ? colors.text : colors.textSecondary }]}>
                   {awayTeam || 'Seleccionar'}
                 </Text>
-                <ChevronDown size={20} color="#6B7280" />
+                <ChevronDown size={20} color={colors.textSecondary} />
               </TouchableOpacity>
               {showAwayTeamDropdown && (
-                <View style={styles.dropdownList}>
+                <View style={[styles.dropdownList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   {teams.map((team) => (
                     <TouchableOpacity
                       key={team}
-                      style={styles.dropdownItem}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border }]}
                       onPress={() => {
                         setAwayTeam(team);
                         setShowAwayTeamDropdown(false);
                       }}
                     >
-                      <Text style={styles.dropdownItemText}>{team}</Text>
+                      <Text style={[styles.dropdownItemText, { color: colors.text }]}>{team}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -474,29 +508,31 @@ export default function Pike() {
           {/* Middle and Up Row */}
           <View style={styles.middleUpRow}>
             <View style={styles.inputGroup}>
-              <Text style={styles.formLabel}>Middle:</Text>
+              <Text style={[styles.formLabel, { color: colors.text }]}>Middle:</Text>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                 value={middle}
                 onChangeText={setMiddle}
                 placeholder="Ej: 2ym"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.formLabel}>Up:</Text>
+              <Text style={[styles.formLabel, { color: colors.text }]}>Up:</Text>
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                 value={up}
                 onChangeText={setUp}
                 placeholder="Ej: pym"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
 
           {/* Period Selection */}
           <View style={styles.formGroup}>
-            <Text style={styles.formLabel}>Período:</Text>
+            <Text style={[styles.formLabel, { color: colors.text }]}>Período:</Text>
             <View style={styles.radioGroup}>
               {(['G', 'MT', '1/4'] as const).map((period) => (
                 <TouchableOpacity
@@ -506,11 +542,12 @@ export default function Pike() {
                 >
                   <View style={[
                     styles.radioCircle,
-                    selectedPeriod === period && styles.radioSelected
+                    { borderColor: colors.border },
+                    selectedPeriod === period && { ...styles.radioSelected, borderColor: colors.primary }
                   ]}>
-                    {selectedPeriod === period && <View style={styles.radioInner} />}
+                    {selectedPeriod === period && <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />}
                   </View>
-                  <Text style={styles.radioLabel}>{period}</Text>
+                  <Text style={[styles.radioLabel, { color: colors.text }]}>{period}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -524,27 +561,30 @@ export default function Pike() {
             >
               <View style={[
                 styles.checkbox,
-                isTripleta && styles.checkboxSelected
+                { borderColor: colors.border },
+                isTripleta && { ...styles.checkboxSelected, backgroundColor: colors.primary, borderColor: colors.primary }
               ]}>
                 {isTripleta && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.checkboxLabel}>x3 (Tripleta)</Text>
+              <Text style={[styles.checkboxLabel, { color: colors.text }]}>x3 (Tripleta)</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
 
-        <View style={styles.modalActions}>
+        <View style={[styles.modalActions, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setShowCreateModal(false)}
+            style={[styles.cancelButton, { backgroundColor: colors.textSecondary }]}
+            onPress={handleCloseModal}
           >
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.createButton}
+            style={[styles.createButton, { backgroundColor: colors.primary }]}
             onPress={handleCreatePike}
           >
-            <Text style={styles.createButtonText}>Crear</Text>
+            <Text style={styles.createButtonText}>
+              {editingPike ? 'Actualizar' : 'Crear'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -768,6 +808,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -776,6 +817,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  editPikeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
   pikeTopRow: {
     flexDirection: 'row',
@@ -906,7 +958,6 @@ const styles = StyleSheet.create({
   // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -914,13 +965,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
   },
   modalContent: {
     flex: 1,
@@ -932,28 +980,22 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 8,
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
   dropdownText: {
     fontSize: 14,
-    color: '#1F2937',
   },
   dropdownList: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
     marginTop: 4,
     maxHeight: 150,
@@ -962,11 +1004,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   dropdownItemText: {
     fontSize: 14,
-    color: '#1F2937',
   },
   teamsRow: {
     flexDirection: 'row',
@@ -985,9 +1025,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textInput: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1007,22 +1045,18 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: '#4F46E5',
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4F46E5',
   },
   radioLabel: {
     fontSize: 14,
-    color: '#1F2937',
   },
   checkboxOption: {
     flexDirection: 'row',
@@ -1033,14 +1067,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#4F46E5',
-    borderColor: '#4F46E5',
   },
   checkmark: {
     color: '#FFFFFF',
@@ -1049,21 +1080,17 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: 14,
-    color: '#1F2937',
   },
   modalActions: {
     flexDirection: 'row',
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   cancelButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#6B7280',
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -1075,7 +1102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#4F46E5',
     alignItems: 'center',
   },
   createButtonText: {
